@@ -21,7 +21,7 @@ export class UsersService {
   // Crea un nuovo utente nel database.
   async create(dto: CreateUserDto): Promise<User> {
     try {
-      return await this.userModel.create(dto as any);
+      return await this.userModel.create({ name: dto.name, email: dto.email });
     } catch (error) {
       // Se l'email è già presente, mappa l'eccezione di unicità su HTTP 409.
       if (error instanceof UniqueConstraintError) {

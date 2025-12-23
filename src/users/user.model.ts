@@ -8,25 +8,34 @@ import {
   HasMany,
   Unique,
 } from 'sequelize-typescript';
+import {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+  NonAttribute,
+} from 'sequelize';
 import { Task } from '../tasks/task.model';
 
 // Definisce la tabella "users" nel database.
 @Table({ tableName: 'users' })
-export class User extends Model<User> {
+export class User extends Model<
+  InferAttributes<User>,
+  InferCreationAttributes<User>
+> {
   // Chiave primaria incrementale dell'utente.
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   })
-  declare id: number;
+  declare id: CreationOptional<number>;
 
   // Nome completo dell'utente.
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  name!: string;
+  declare name: string;
 
   // Indirizzo email univoco dell'utente.
   @Unique
@@ -34,11 +43,11 @@ export class User extends Model<User> {
     type: DataType.STRING,
     allowNull: false,
   })
-  email!: string;
+  declare email: string;
 
   // Relazione: un utente possiede molti task.
   // onDelete: 'CASCADE' fa sì che, eliminando un utente, vengano eliminati
   // automaticamente anche tutti i task associati.
   @HasMany(() => Task, { onDelete: 'CASCADE', hooks: true })
-  tasks?: Task[];
+  declare tasks?: NonAttribute<Task[]>;
 }
