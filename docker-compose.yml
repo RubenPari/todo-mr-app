@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       # Password dell'utente root di MySQL
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_ROOT_PASSWORD: password
       # Database usato dall'applicazione
       MYSQL_DATABASE: todo_app
       # Utente applicativo non-root
@@ -18,7 +18,7 @@ services:
       - db_data:/var/lib/mysql
     healthcheck:
       # Verifica che MySQL sia pronto accedendo come root
-      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-uroot', '-proot_password']
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-uroot', '-ppassword']
       interval: 10s
       timeout: 5s
       retries: 5
