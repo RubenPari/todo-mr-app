@@ -5,6 +5,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -56,6 +57,7 @@ export class UsersController {
 
   // Elimina un utente.
   @Delete(':id')
+  @HttpCode(204)
   @ApiOkResponse({ description: 'User deleted' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.usersService.remove(id);

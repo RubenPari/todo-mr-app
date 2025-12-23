@@ -1,7 +1,12 @@
 // Servizio applicativo per la gestione degli utenti.
 // Incapsula tutta la logica di accesso al database relativa alla risorsa User.
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { UniqueConstraintError } from 'sequelize';
 import { User } from './user.model';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,9 +20,17 @@ export class UsersService {
   ) {}
 
   // Crea un nuovo utente a partire dai dati validati del DTO.
-  create(dto: CreateUserDto): Promise<User> {
-    // cast esplicito per adattare il DTO al tipo atteso da Sequelize
-    return this.userModel.create(dto as any);
+  async create(dto: CreateUserDto): Promise<User> {
+    try {
+      // cast esplicito per adattare il DTO al tipo atteso da Sequelize
+      return await this.userModel.create(dto as any);
+    } catch (error) {
+      // Se l'email è già presente, mappa l'eccezione di unicità su HTTP 409.
+      if (error instanceof UniqueConstraintError) {
+        throw new ConflictException('Esiste già un utente con questa email');
+      }
+      throw error;
+    }
   }
 
   // Restituisce la lista completa degli utenti.

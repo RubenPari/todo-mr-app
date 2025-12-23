@@ -6,6 +6,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -62,6 +63,7 @@ export class TasksController {
 
   // Elimina un task.
   @Delete('tasks/:id')
+  @HttpCode(204)
   @ApiOkResponse({ description: 'Task deleted' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.tasksService.remove(id);
