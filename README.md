@@ -34,14 +34,77 @@ $ npm install
 ## Compile and run the project
 
 ```bash
-# development
+# development (no watch)
 $ npm run start
 
 # watch mode
 $ npm run start:dev
 
-# production mode
+# production mode (requires build)
+$ npm run build
 $ npm run start:prod
+```
+
+The HTTP server listens on `process.env.PORT` if set, otherwise on port `3000`.
+
+### Database configuration (MySQL + Sequelize)
+
+L'app utilizza Sequelize con MySQL. Puoi configurare la connessione tramite variabili d'ambiente:
+
+- `DB_HOST` (default: `localhost`)
+- `DB_PORT` (default: `3306`)
+- `DB_USER` (default: `root`)
+- `DB_PASSWORD` (default: `password`)
+- `DB_NAME` (default: `todo_app`)
+
+In fase di avvio, i modelli vengono sincronizzati automaticamente (`synchronize: true`).
+
+## API principali
+
+L'API espone endpoint per gestire utenti e task.
+
+### Utenti
+
+- `POST /users` — crea un utente
+- `GET /users` — lista tutti gli utenti
+- `GET /users/:id` — dettaglio utente
+- `PATCH /users/:id` — aggiorna un utente
+- `DELETE /users/:id` — elimina un utente
+
+Esempio payload `POST /users`:
+
+```json
+{
+  "name": "Mario Rossi",
+  "email": "mario.rossi@example.com"
+}
+```
+
+### Task
+
+- `POST /users/:userId/tasks` — crea un task per l'utente `userId`
+- `GET /users/:userId/tasks` — lista i task di un utente
+- `GET /tasks/:id` — dettaglio task
+- `PATCH /tasks/:id` — aggiorna un task
+- `DELETE /tasks/:id` — elimina un task
+
+Esempio payload `POST /users/1/tasks`:
+
+```json
+{
+  "title": "Compra il latte",
+  "description": "Ricordati di comprare il latte al supermercato",
+  "completed": false
+}
+```
+
+### Validazione e Swagger
+
+- La validazione degli input è gestita tramite `class-validator` e `class-transformer` (ValidationPipe globale).
+- La documentazione OpenAPI/Swagger è disponibile su:
+
+```text
+http://localhost:3000/api
 ```
 
 ## Run tests
@@ -56,6 +119,8 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+
+> Nota: per l'esecuzione completa dei test è necessario avere un'istanza MySQL raggiungibile con i parametri configurati (ad esempio tramite `docker-compose`).
 
 ## Deployment
 
