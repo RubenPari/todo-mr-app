@@ -37,6 +37,8 @@ export class User extends Model<User> {
   email!: string;
 
   // Relazione: un utente possiede molti task.
-  @HasMany(() => Task)
+  // onDelete: 'CASCADE' fa sì che, eliminando un utente, vengano eliminati
+  // automaticamente anche tutti i task associati.
+  @HasMany(() => Task, { onDelete: 'CASCADE', hooks: true })
   tasks?: Task[];
 }

@@ -53,6 +53,8 @@ export class Task extends Model<Task> {
   userId!: number;
 
   // Relazione di appartenenza: il task appartiene a un utente.
-  @BelongsTo(() => User)
+  // onDelete/onUpdate a livello di associazione garantiscono che la FK
+  // venga aggiornata/cancellata correttamente quando cambia l'utente.
+  @BelongsTo(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   user?: User;
 }
