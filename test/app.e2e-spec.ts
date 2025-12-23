@@ -21,32 +21,20 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    // Esegue una richiesta HTTP GET alla root e verifica status e payload.
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
+  // Test sull'endpoint root rimosso perché non necessario all'app.
 
-  it('POST /users deve restituire 409 se l\'email è duplicata', async () => {
+  it("POST /users deve restituire 409 se l'email è duplicata", async () => {
     const email = `dup-${Date.now()}@example.com`;
     const payload = { name: 'Mario', email };
 
     // Prima creazione deve andare a buon fine.
-    await request(app.getHttpServer())
-      .post('/users')
-      .send(payload)
-      .expect(201);
+    await request(app.getHttpServer()).post('/users').send(payload).expect(201);
 
     // Seconda creazione con la stessa email deve restituire 409.
-    await request(app.getHttpServer())
-      .post('/users')
-      .send(payload)
-      .expect(409);
+    await request(app.getHttpServer()).post('/users').send(payload).expect(409);
   });
 
-  it('POST /users/:id/tasks deve restituire 404 se l\'utente non esiste', async () => {
+  it("POST /users/:id/tasks deve restituire 404 se l'utente non esiste", async () => {
     const nonExistingUserId = 999999;
 
     await request(app.getHttpServer())
