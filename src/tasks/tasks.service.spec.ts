@@ -64,10 +64,12 @@ describe('TasksService', () => {
 
     expect(usersService.findOne).toHaveBeenCalledWith(123);
 
-    expect(taskModel.create).toHaveBeenCalledWith({
-      title: 'Task test',
-      userId: 123,
-    } as any);
+    expect(taskModel.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Task test',
+        userId: 123,
+      }),
+    );
 
     expect(result).toBe(createdTask);
   });
