@@ -1,7 +1,7 @@
 // DTO per la creazione di un nuovo utente.
 // Definisce la forma dei dati accettati dall'API e le regole di validazione.
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   // Nome completo dell'utente.
@@ -15,4 +15,10 @@ export class CreateUserDto {
   @IsEmail()
   @IsNotEmpty()
   email!: string;
+
+  // Password dell'utente (min 8 caratteri).
+  @ApiProperty({ example: 'Str0ngP@ssw0rd' })
+  @IsString()
+  @MinLength(8)
+  password!: string;
 }

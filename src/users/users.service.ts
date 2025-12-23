@@ -10,6 +10,7 @@ import { UniqueConstraintError } from 'sequelize';
 import { User } from './user.model';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -21,7 +22,14 @@ export class UsersService {
   // Crea un nuovo utente nel database.
   async create(dto: CreateUserDto): Promise<User> {
     try {
-      return await this.userModel.create({ name: dto.name, email: dto.email });
+      const hashed = await bcrypt.hash(dto.password, 10);
+      const created = await this.userModel.create({
+        name: dto.name,
+        email: dto.email,
+        password: hashed,
+      });
+      // Ricarica con defaultScope per escludere la password dalla risposta
+      return await this.findOne(created.id as number);
     } catch (error) {
       // Se l'email è già presente, mappa l'eccezione di unicità su HTTP 409.
       if (error instanceof UniqueConstraintError) {
@@ -43,6 +51,11 @@ export class UsersService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
     return user;
+  }
+
+  // Ricerca utente per email includendo la password (per login)
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.userModel.scope('withPassword').findOne({ where: { email } });
   }
 
   // Aggiorna un utente esistente con i dati forniti nel DTO di update.

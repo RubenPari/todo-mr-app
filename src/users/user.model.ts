@@ -17,7 +17,17 @@ import type {
 import { Task } from '../tasks/task.model';
 
 // Definisce la tabella "users" nel database.
-@Table({ tableName: 'users' })
+@Table({
+  tableName: 'users',
+  defaultScope: {
+    attributes: { exclude: ['password'] },
+  },
+  scopes: {
+    withPassword: {
+      attributes: { include: ['password'] },
+    },
+  },
+})
 export class User extends Model<
   InferAttributes<User>,
   InferCreationAttributes<User>
@@ -44,6 +54,13 @@ export class User extends Model<
     allowNull: false,
   })
   declare email: string;
+
+  // Password dell'utente (hash Bcrypt). Esclusa dallo scope di default.
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare password: string;
 
   // Relazione: un utente possiede molti task.
   // onDelete: 'CASCADE' fa sì che, eliminando un utente, vengano eliminati
