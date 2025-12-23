@@ -5,10 +5,12 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
 import { Task } from './task.model';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  // Registra il modello Task per l'uso con Sequelize in questo modulo.
-  imports: [SequelizeModule.forFeature([Task])],
+  // Registra il modello Task per l'uso con Sequelize in questo modulo
+  // e importa UsersModule per poter verificare l'esistenza dell'utente.
+  imports: [SequelizeModule.forFeature([Task]), UsersModule],
   // Controller HTTP per i task.
   controllers: [TasksController],
   // Servizi disponibili per injection.

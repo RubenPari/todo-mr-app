@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Task } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class TasksService {
@@ -12,10 +13,15 @@ export class TasksService {
   constructor(
     @InjectModel(Task)
     private readonly taskModel: typeof Task,
+    // UsersService viene iniettato per verificare che l'utente esista
+    // prima di creare un task a suo nome.
+    private readonly usersService: UsersService,
   ) {}
 
   // Crea un nuovo task associato a un determinato utente.
-  createForUser(userId: number, dto: CreateTaskDto): Promise<Task> {
+  // Se l'utente non esiste, viene sollevata una NotFoundException (HTTP 404).
+  async createForUser(userId: number, dto: CreateTaskDto): Promise<Task> {
+    await this.usersService.findOne(userId);
     // cast esplicito per adattare il payload al tipo atteso da Sequelize
     return this.taskModel.create({ ...dto, userId } as any);
   }
