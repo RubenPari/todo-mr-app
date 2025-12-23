@@ -47,6 +47,8 @@ $ npm run start:prod
 
 The HTTP server listens on `process.env.PORT` if set, otherwise on port `3000`.
 
+> Nota: non è esposto alcun endpoint alla root (`/`). Per l'esplorazione delle API usa la documentazione Swagger su `/api` o chiama direttamente le rotte elencate sotto.
+
 ### Database configuration (MySQL + Sequelize)
 
 L'app utilizza Sequelize con MySQL. Puoi configurare la connessione tramite variabili d'ambiente:
