@@ -28,4 +28,30 @@ describe('AppController (e2e)', () => {
       .expect(200)
       .expect('Hello World!');
   });
+
+  it('POST /users deve restituire 409 se l\'email è duplicata', async () => {
+    const email = `dup-${Date.now()}@example.com`;
+    const payload = { name: 'Mario', email };
+
+    // Prima creazione deve andare a buon fine.
+    await request(app.getHttpServer())
+      .post('/users')
+      .send(payload)
+      .expect(201);
+
+    // Seconda creazione con la stessa email deve restituire 409.
+    await request(app.getHttpServer())
+      .post('/users')
+      .send(payload)
+      .expect(409);
+  });
+
+  it('POST /users/:id/tasks deve restituire 404 se l\'utente non esiste', async () => {
+    const nonExistingUserId = 999999;
+
+    await request(app.getHttpServer())
+      .post(`/users/${nonExistingUserId}/tasks`)
+      .send({ title: 'Task per utente inesistente' })
+      .expect(404);
+  });
 });
