@@ -20,7 +20,13 @@ export class TasksService {
   // Crea un nuovo task associato a un determinato utente.
   async createForUser(userId: number, dto: CreateTaskDto): Promise<Task> {
     await this.usersService.findOne(userId);
-    return this.taskModel.create({ ...dto, userId } as any);
+    const payload = {
+      title: dto.title,
+      description: dto.description ?? null,
+      completed: dto.completed ?? false,
+      userId,
+    };
+    return this.taskModel.create(payload);
   }
 
   // Restituisce tutti i task appartenenti a uno specifico utente.
