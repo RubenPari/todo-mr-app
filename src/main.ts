@@ -39,5 +39,5 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 
-// Esegue il bootstrap dell'applicazione.
-bootstrap();
+// Esegue il bootstrap dell'applicazione (ignorando intenzionalmente la Promise per il linter).
+void bootstrap();
