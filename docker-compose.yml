@@ -3,21 +3,29 @@ version: '3.9'
 services:
   db:
     image: mysql:8.0
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      # Password dell'utente root di MySQL
+      MYSQL_ROOT_PASSWORD: root_password
+      # Database usato dall'applicazione
       MYSQL_DATABASE: todo_app
-      MYSQL_USER: root
-      MYSQL_PASSWORD: password
+      # Utente applicativo non-root
+      MYSQL_USER: todo_user
+      MYSQL_PASSWORD: todo_password
     ports:
       - '3306:3306'
+    volumes:
+      - db_data:/var/lib/mysql
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      # Verifica che MySQL sia pronto accedendo come root
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-uroot', '-proot_password']
       interval: 10s
       timeout: 5s
       retries: 5
 
   app:
     build: .
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
@@ -25,9 +33,13 @@ services:
       PORT: 3000
       DB_HOST: db
       DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: password
+      # L'app si connette con l'utente applicativo, non con root
+      DB_USER: todo_user
+      DB_PASSWORD: todo_password
       DB_NAME: todo_app
     ports:
       - '3000:3000'
     command: ["node", "dist/main.js"]
+
+volumes:
+  db_data:
