@@ -2,7 +2,7 @@
 // Avviano un'istanza reale di Nest e verificano che l'endpoint root
 // risponda correttamente tramite una richiesta HTTP.
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -18,7 +18,21 @@ describe('AppController (e2e)', () => {
 
     // Crea e inizializza l'applicazione Nest effettiva.
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     await app.init();
+  });
+
+  // Chiudi l'app dopo ogni test per evitare handle aperti in Jest.
+  afterEach(async () => {
+    if (app) {
+      await app.close();
+    }
   });
 
   // Test sull'endpoint root rimosso perché non necessario all'app.
