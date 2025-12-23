@@ -19,7 +19,7 @@ export class User extends Model<User> {
     autoIncrement: true,
     primaryKey: true,
   })
-  id!: number;
+  declare id: number;
 
   // Nome completo dell'utente.
   @Column({

@@ -16,7 +16,8 @@ export class UsersService {
 
   // Crea un nuovo utente a partire dai dati validati del DTO.
   create(dto: CreateUserDto): Promise<User> {
-    return this.userModel.create(dto);
+    // cast esplicito per adattare il DTO al tipo atteso da Sequelize
+    return this.userModel.create(dto as any);
   }
 
   // Restituisce la lista completa degli utenti.

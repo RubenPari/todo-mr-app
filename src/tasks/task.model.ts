@@ -19,7 +19,7 @@ export class Task extends Model<Task> {
     autoIncrement: true,
     primaryKey: true,
   })
-  id!: number;
+  declare id: number;
 
   // Titolo breve del task.
   @Column({

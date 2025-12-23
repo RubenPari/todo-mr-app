@@ -16,7 +16,8 @@ export class TasksService {
 
   // Crea un nuovo task associato a un determinato utente.
   createForUser(userId: number, dto: CreateTaskDto): Promise<Task> {
-    return this.taskModel.create({ ...dto, userId });
+    // cast esplicito per adattare il payload al tipo atteso da Sequelize
+    return this.taskModel.create({ ...dto, userId } as any);
   }
 
   // Restituisce tutti i task appartenenti a uno specifico utente.
