@@ -1,3 +1,5 @@
+// Modello Sequelize che rappresenta un utente dell'applicazione.
+// Ogni utente può avere più task associati.
 import {
   Table,
   Column,
@@ -8,8 +10,10 @@ import {
 } from 'sequelize-typescript';
 import { Task } from '../tasks/task.model';
 
+// Definisce la tabella "users" nel database.
 @Table({ tableName: 'users' })
 export class User extends Model<User> {
+  // Chiave primaria incrementale dell'utente.
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,
@@ -17,12 +21,14 @@ export class User extends Model<User> {
   })
   id!: number;
 
+  // Nome completo dell'utente.
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
   name!: string;
 
+  // Indirizzo email univoco dell'utente.
   @Unique
   @Column({
     type: DataType.STRING,
@@ -30,6 +36,7 @@ export class User extends Model<User> {
   })
   email!: string;
 
+  // Relazione: un utente possiede molti task.
   @HasMany(() => Task)
   tasks?: Task[];
 }
