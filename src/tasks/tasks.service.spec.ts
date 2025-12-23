@@ -38,30 +38,37 @@ describe('TasksService', () => {
     service = module.get<TasksService>(TasksService);
   });
 
+  // Test per la gestione della creazione di un task per un utente inesistente.
   it('dovrebbe lanciare NotFoundException quando si crea un task per un utente inesistente', async () => {
     usersService.findOne.mockRejectedValue(new NotFoundException());
 
+    const createTaskDto = { title: 'Task test' };
+
     await expect(
-      service.createForUser(123, { title: 'Task test' } as any),
+      service.createForUser(123, createTaskDto),
     ).rejects.toBeInstanceOf(NotFoundException);
 
     expect(taskModel.create).not.toHaveBeenCalled();
   });
 
-  it('dovrebbe creare un task quando l\'utente esiste', async () => {
+  it("dovrebbe creare un task quando l'utente esiste", async () => {
     const createdTask = { id: 1, title: 'Task test', userId: 123 } as Task;
+
     usersService.findOne.mockResolvedValue({ id: 123 });
+
     taskModel.create.mockResolvedValue(createdTask);
 
-    const result = await service.createForUser(123, {
-      title: 'Task test',
-    } as any);
+    const createTaskDto = { title: 'Task test' };
+
+    const result = await service.createForUser(123, createTaskDto);
 
     expect(usersService.findOne).toHaveBeenCalledWith(123);
+
     expect(taskModel.create).toHaveBeenCalledWith({
       title: 'Task test',
       userId: 123,
     } as any);
+
     expect(result).toBe(createdTask);
   });
 });

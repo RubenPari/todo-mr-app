@@ -17,9 +17,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './user.model';
 
-// Tag Swagger per raggruppare tutti gli endpoint degli utenti.
 @ApiTags('users')
-// Prefisso di routing: tutti gli endpoint iniziano con /users.
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

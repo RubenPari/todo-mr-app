@@ -9,7 +9,6 @@ import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class TasksService {
-  // Il model Sequelize viene iniettato tramite InjectModel.
   constructor(
     @InjectModel(Task)
     private readonly taskModel: typeof Task,
@@ -19,10 +18,8 @@ export class TasksService {
   ) {}
 
   // Crea un nuovo task associato a un determinato utente.
-  // Se l'utente non esiste, viene sollevata una NotFoundException (HTTP 404).
   async createForUser(userId: number, dto: CreateTaskDto): Promise<Task> {
     await this.usersService.findOne(userId);
-    // cast esplicito per adattare il payload al tipo atteso da Sequelize
     return this.taskModel.create({ ...dto, userId } as any);
   }
 

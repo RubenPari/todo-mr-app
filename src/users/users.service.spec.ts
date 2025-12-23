@@ -28,7 +28,8 @@ describe('UsersService', () => {
     service = module.get<UsersService>(UsersService);
   });
 
-  it('dovrebbe lanciare ConflictException quando l\'email è duplicata', async () => {
+  // Test per la gestione della creazione di un utente con email duplicata.
+  it("dovrebbe lanciare ConflictException quando l'email è duplicata", async () => {
     userModel.create.mockRejectedValue(
       new UniqueConstraintError({ errors: [] as any }),
     );
@@ -38,8 +39,13 @@ describe('UsersService', () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
+  // Test per la creazione corretta di un utente con dati validi e unici.
   it('dovrebbe creare correttamente un utente quando i dati sono validi e unici', async () => {
-    const createdUser = { id: 1, name: 'Mario', email: 'ok@example.com' } as User;
+    const createdUser = {
+      id: 1,
+      name: 'Mario',
+      email: 'ok@example.com',
+    } as User;
     userModel.create.mockResolvedValue(createdUser);
 
     const result = await service.create({

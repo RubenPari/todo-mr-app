@@ -3,8 +3,6 @@
 // e importati i moduli funzionali (utenti e task).
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { TasksModule } from './tasks/tasks.module';
 
@@ -26,14 +24,8 @@ import { TasksModule } from './tasks/tasks.module';
       // Disabilita il logging SQL dettagliato in console.
       logging: false,
     }),
-    // Modulo per la gestione degli utenti.
     UsersModule,
-    // Modulo per la gestione dei task.
     TasksModule,
   ],
-  // Controller a livello di applicazione (es. endpoint root "/").
-  controllers: [AppController],
-  // Provider condivisi a livello di applicazione.
-  providers: [AppService],
 })
 export class AppModule {}

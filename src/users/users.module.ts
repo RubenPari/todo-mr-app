@@ -9,11 +9,8 @@ import { User } from './user.model';
 @Module({
   // Registra il modello User all'interno di Sequelize per questo modulo.
   imports: [SequelizeModule.forFeature([User])],
-  // Controller HTTP esposti da questo modulo.
   controllers: [UsersController],
-  // Servizi disponibili per injection.
   providers: [UsersService],
-  // Esporta UsersService per poterlo riutilizzare in altri moduli se necessario.
   exports: [UsersService],
 })
 export class UsersModule {}

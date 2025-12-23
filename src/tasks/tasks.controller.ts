@@ -18,9 +18,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { Task } from './task.model';
 
-// Tag Swagger per raggruppare tutti gli endpoint dei task.
 @ApiTags('tasks')
-// Nessun prefisso: le route sono definite direttamente sugli handler (es. users/:userId/tasks).
 @Controller()
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}

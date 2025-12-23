@@ -13,16 +13,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  // Il model Sequelize viene iniettato tramite InjectModel.
   constructor(
     @InjectModel(User)
     private readonly userModel: typeof User,
   ) {}
 
-  // Crea un nuovo utente a partire dai dati validati del DTO.
+  // Crea un nuovo utente nel database.
   async create(dto: CreateUserDto): Promise<User> {
     try {
-      // cast esplicito per adattare il DTO al tipo atteso da Sequelize
       return await this.userModel.create(dto as any);
     } catch (error) {
       // Se l'email è già presente, mappa l'eccezione di unicità su HTTP 409.

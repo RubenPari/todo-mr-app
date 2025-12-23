@@ -11,11 +11,8 @@ import { UsersModule } from '../users/users.module';
   // Registra il modello Task per l'uso con Sequelize in questo modulo
   // e importa UsersModule per poter verificare l'esistenza dell'utente.
   imports: [SequelizeModule.forFeature([Task]), UsersModule],
-  // Controller HTTP per i task.
   controllers: [TasksController],
-  // Servizi disponibili per injection.
   providers: [TasksService],
-  // Esporta TasksService per l'utilizzo in altri moduli.
   exports: [TasksService],
 })
 export class TasksModule {}
