@@ -8,7 +8,7 @@ import {
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
-import {
+import type {
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,

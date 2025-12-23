@@ -8,7 +8,7 @@ import {
   HasMany,
   Unique,
 } from 'sequelize-typescript';
-import {
+import type {
   CreationOptional,
   InferAttributes,
   InferCreationAttributes,
