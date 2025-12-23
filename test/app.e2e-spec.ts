@@ -1,22 +1,19 @@
 // Test end-to-end per l'applicazione.
-// Avviano un'istanza reale di Nest e verificano che l'endpoint root
-// risponda correttamente tramite una richiesta HTTP.
+// Verifica flussi di registrazione/login e operazioni sui task autenticati.
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 
-describe('AppController (e2e)', () => {
+describe('App (e2e)', () => {
   let app: INestApplication<App>;
 
-  // Prima di ogni test viene creato un modulo Nest completo con AppModule.
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    // Crea e inizializza l'applicazione Nest effettiva.
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
@@ -28,58 +25,52 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  // Chiudi l'app dopo ogni test per evitare handle aperti in Jest.
   afterEach(async () => {
-    if (app) {
-      await app.close();
-    }
+    if (app) await app.close();
   });
 
-  // Test sull'endpoint root rimosso perché non necessario all'app.
-
-  it("POST /users deve restituire 409 se l'email è duplicata", async () => {
+  it("POST /auth/register deve restituire 409 se l'email è duplicata", async () => {
     const email = `dup-${Date.now()}@example.com`;
-    const payload = { name: 'Mario', email };
-
-    // Prima creazione deve andare a buon fine.
-    await request(app.getHttpServer()).post('/users').send(payload).expect(201);
-
-    // Seconda creazione con la stessa email deve restituire 409.
-    await request(app.getHttpServer()).post('/users').send(payload).expect(409);
-  });
-
-  it("POST /users/:id/tasks deve restituire 404 se l'utente non esiste", async () => {
-    const nonExistingUserId = 999999;
+    const payload = { name: 'Mario', email, password: 'Str0ngP@ssw0rd' };
 
     await request(app.getHttpServer())
-      .post(`/users/${nonExistingUserId}/tasks`)
-      .send({ title: 'Task per utente inesistente' })
-      .expect(404);
+      .post('/auth/register')
+      .send(payload)
+      .expect(201);
+    await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(payload)
+      .expect(409);
   });
 
-  it('dovrebbe permettere il flusso completo utente + task (crea, lista, cancella)', async () => {
+  it('flusso completo autenticato: login, crea/lista/cancella task', async () => {
     const server = app.getHttpServer();
 
-    // Crea un nuovo utente
     const email = `flow-${Date.now()}@example.com`;
-    const createUserRes = await request(server)
-      .post('/users')
-      .send({ name: 'Flusso Utente', email })
+    const password = 'Str0ngP@ssw0rd';
+
+    await request(server)
+      .post('/auth/register')
+      .send({ name: 'Flusso Utente', email, password })
       .expect(201);
 
-    const userId = createUserRes.body.id as number;
+    const login = await request(server)
+      .post('/auth/login')
+      .send({ email, password })
+      .expect(200);
+    const token = login.body.access_token as string;
 
-    // Crea un task per l'utente appena creato
     const createTaskRes = await request(server)
-      .post(`/users/${userId}/tasks`)
+      .post(`/me/tasks`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ title: 'Primo task', description: 'Task di prova' })
       .expect(201);
 
     const taskId = createTaskRes.body.id as number;
 
-    // Verifica che il task compaia nella lista dei task dell'utente
     const listTasksRes = await request(server)
-      .get(`/users/${userId}/tasks`)
+      .get(`/me/tasks`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     expect(Array.isArray(listTasksRes.body)).toBe(true);
@@ -89,12 +80,14 @@ describe('AppController (e2e)', () => {
       ]),
     );
 
-    // Cancella il task e verifica che non sia più recuperabile
-    await request(server).delete(`/tasks/${taskId}`).expect(204);
-    await request(server).get(`/tasks/${taskId}`).expect(404);
+    await request(server)
+      .delete(`/me/tasks/${taskId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(204);
 
-    // Cancella l'utente e verifica che non sia più recuperabile
-    await request(server).delete(`/users/${userId}`).expect(204);
-    await request(server).get(`/users/${userId}`).expect(404);
+    await request(server)
+      .get(`/me/tasks/${taskId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(404);
   });
 });
