@@ -1,0 +1,10 @@
+Obiettivo:
+Realizza una semplice API REST che permetta di gestire utenti e i loro “task” (to-do list).
+L’implementazione dovrà prevedere:
+Strutturazione del progetto orientata a best practice (organizzazione cartelle, modularità,ecc.)
+* Utilizzo di Sequelize
+* Il database mysql
+* Esempio di validazione dati in input
+* documentazione API (Swagger/OpenAPI)
+* Esecuzione in Docker
+* README dettagliato con istruzioni di avvio, scelte tecniche, come far partire i test.
