@@ -27,5 +27,7 @@ import { TasksModule } from './tasks/tasks.module';
     UsersModule,
     TasksModule,
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
