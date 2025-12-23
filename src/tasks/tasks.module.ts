@@ -3,6 +3,7 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { TasksController } from './tasks.controller';
+import { MeTasksController } from './me.tasks.controller';
 import { TasksService } from './tasks.service';
 import { Task } from './task.model';
 import { UsersModule } from '../users/users.module';
@@ -11,7 +12,7 @@ import { UsersModule } from '../users/users.module';
   // Registra il modello Task per l'uso con Sequelize in questo modulo
   // e importa UsersModule per poter verificare l'esistenza dell'utente.
   imports: [SequelizeModule.forFeature([Task]), UsersModule],
-  controllers: [TasksController],
+  controllers: [TasksController, MeTasksController],
   providers: [TasksService],
   exports: [TasksService],
 })
