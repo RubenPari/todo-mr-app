@@ -5,7 +5,7 @@
 [circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+  <p align="center">Un framework <a href="http://nodejs.org" target="_blank">Node.js</a> progressivo per costruire applicazioni server-side efficienti e scalabili.</p>
     <p align="center">
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
@@ -21,48 +21,67 @@
   <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
   [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+## Descrizione
 
-A simple REST API for managing users and their tasks (to-do list). Built with **NestJS**, **TypeScript**, **MySQL**, and **Sequelize ORM**. Includes authentication with JWT, input validation, Swagger documentation, Docker support, and comprehensive test coverage.
+Una semplice API REST per la gestione di utenti e dei loro task (lista di cose da fare). Costruita con **NestJS**, **TypeScript**, **MySQL** e **Sequelize ORM**. Include autenticazione con JWT, validazione degli input, documentazione Swagger, supporto Docker e copertura completa dei test.
 
-### Technology Stack
+### Avvio Rapido
 
-- **Framework**: [NestJS](https://nestjs.com) — Progressive Node.js framework for building scalable server applications
-- **ORM**: [Sequelize](https://sequelize.org) with [sequelize-typescript](https://github.com/sequelize/sequelize-typescript)
-  - **Why Sequelize?** Mature, well-documented ORM with strong TypeScript support, excellent for relational databases, familiar API, and seamless integration with NestJS via `@nestjs/sequelize`
-- **Database**: MySQL 8.0 (configurable via environment variables)
-- **Authentication**: JWT with Passport.js
-- **Validation**: `class-validator` + `class-transformer` with global ValidationPipe
-- **API Documentation**: Swagger/OpenAPI on `/api`
-- **Containerization**: Docker + Docker Compose with multi-stage builds
-- **Testing**: Jest unit tests and end-to-end tests with Supertest
-- **Password hashing**: bcrypt (salted + hashed passwords, never stored in plaintext)
+```bash
+# Installa le dipendenze
+npm install
 
-## Project setup
+# Avvia il database con Docker
+docker compose up -d db
+
+# Esegui in modalità sviluppo
+npm run start:dev
+
+# Esegui i test
+npm run test          # Test unitari
+npm run test:e2e      # Test end-to-end (richiede database in esecuzione)
+```
+
+L'API sarà disponibile su `http://localhost:3000` e la documentazione Swagger su `http://localhost:3000/api`.
+
+### Stack Tecnologico
+
+- **Framework**: [NestJS](https://nestjs.com) — Framework Node.js progressivo per costruire applicazioni server scalabili
+- **ORM**: [Sequelize](https://sequelize.org) con [sequelize-typescript](https://github.com/sequelize/sequelize-typescript)
+  - **Perché Sequelize?** ORM maturo e ben documentato con forte supporto TypeScript, eccellente per database relazionali, API familiare e integrazione seamless con NestJS tramite `@nestjs/sequelize`
+- **Database**: MySQL 8.0 (configurabile tramite variabili d'ambiente)
+- **Autenticazione**: JWT con Passport.js
+- **Validazione**: `class-validator` + `class-transformer` con ValidationPipe globale
+- **Documentazione API**: Swagger/OpenAPI su `/api`
+- **Containerizzazione**: Docker + Docker Compose con build multi-stage
+- **Testing**: Test unitari Jest e test end-to-end con Supertest
+- **Hash delle password**: bcrypt (password saltate e hashate, mai memorizzate in chiaro)
+
+## Setup del Progetto
 
 ```bash
 npm install
 ```
 
-## Compile and run the project
+## Compilazione ed Esecuzione
 
 ```bash
-# development (watch mode)
+# sviluppo (modalità watch)
 npm run start:dev
 
-# development (no watch)
+# sviluppo (senza watch)
 npm run start
 
-# production (requires build first)
+# produzione (richiede build prima)
 npm run build
 npm run start:prod
 ```
 
-The HTTP server listens on `process.env.PORT` if set, otherwise on port `3000`.
+Il server HTTP ascolta sulla porta definita da `process.env.PORT` se impostata, altrimenti sulla porta `3000`.
 
-### Database configuration (MySQL + Sequelize)
+### Configurazione Database (MySQL + Sequelize)
 
-Configure via environment variables (defaults work with docker-compose):
+Configurazione tramite variabili d'ambiente (i valori di default funzionano con docker-compose):
 
 - `DB_HOST` (default: `localhost`)
 - `DB_PORT` (default: `3306`)
@@ -70,126 +89,134 @@ Configure via environment variables (defaults work with docker-compose):
 - `DB_PASSWORD` (default: `password`)
 - `DB_NAME` (default: `todo_app`)
 
-### Application configuration
+### Configurazione Applicazione
 
 - `PORT` (default: `3000`) - Porta su cui ascolta il server HTTP
 - `NODE_ENV` (default: `development`) - Ambiente di esecuzione
 
-### JWT configuration
+### Configurazione JWT
 
 - `JWT_SECRET` (default: `dev-secret`) - **IMPORTANTE**: Cambia questo valore in produzione!
   - Genera una chiave sicura con: `openssl rand -base64 32`
-  - In produzione, usa un secret manager (AWS Secrets Manager, HashiCorp Vault, etc.)
+  - In produzione, usa un secret manager (AWS Secrets Manager, HashiCorp Vault, ecc.)
 
-On application startup, all models are automatically synced (`synchronize: true` in development).
+All'avvio dell'applicazione, tutti i modelli vengono sincronizzati automaticamente (`synchronize: true` in sviluppo).
 
-## API Features
+## Funzionalità API
 
-### Authentication (JWT-based)
+### Autenticazione (basata su JWT)
 
-- **Registration**: `POST /auth/register` — Create a new user account
-- **Login**: `POST /auth/login` — Get a JWT access token
-- **Profile**: `GET /auth/me` (protected) — Retrieve authenticated user's profile
+- **Registrazione**: `POST /auth/register` — Crea un nuovo account utente
+- **Login**: `POST /auth/login` — Ottieni un token JWT di accesso
+- **Profilo**: `GET /auth/me` (protetto) — Recupera il profilo dell'utente autenticato
 
-### Users (Admin endpoints - available without authentication)
+### Utenti (Endpoint admin - disponibili senza autenticazione)
 
-- `POST /users` — Create a user
-- `GET /users` — List all users
-- `GET /users/:id` — Get user details
-- `PATCH /users/:id` — Update a user
-- `DELETE /users/:id` — Delete a user
+- `POST /users` — Crea un utente
+- `GET /users` — Elenca tutti gli utenti
+- `GET /users/:id` — Ottieni i dettagli di un utente
+- `PATCH /users/:id` — Aggiorna un utente
+- `DELETE /users/:id` — Elimina un utente
 
-### Tasks (Protected by JWT - only accessible with valid token)
+### Task (Protetti da JWT - accessibili solo con token valido)
 
-All authenticated task operations are under `/me/tasks`:
+Tutte le operazioni sui task autenticate sono sotto `/me/tasks`:
 
-- `POST /me/tasks` — Create a task for authenticated user
-- `GET /me/tasks` — List all tasks of authenticated user
-- `GET /me/tasks/:id` — Get a specific task (only if owned by authenticated user)
-- `PATCH /me/tasks/:id` — Update a task (only if owned by authenticated user)
-- `DELETE /me/tasks/:id` — Delete a task (only if owned by authenticated user)
+- `POST /me/tasks` — Crea un task per l'utente autenticato
+- `GET /me/tasks` — Elenca tutti i task dell'utente autenticato
+- `GET /me/tasks/:id` — Ottieni un task specifico (solo se appartiene all'utente autenticato)
+- `PATCH /me/tasks/:id` — Aggiorna un task (solo se appartiene all'utente autenticato)
+- `DELETE /me/tasks/:id` — Elimina un task (solo se appartiene all'utente autenticato)
 
-### Example requests
+### Esempi di Richieste
 
-**Register & Login**:
+**Registrazione e Login**:
 ```bash
 curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com","password":"SecurePass123"}'
+  -d '{"name":"Mario Rossi","email":"mario@example.com","password":"SecurePass123"}'
 
 curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"john@example.com","password":"SecurePass123"}'
+  -d '{"email":"mario@example.com","password":"SecurePass123"}'
 ```
 
-**Create task (authenticated)**:
+**Crea task (autenticato)**:
 ```bash
 curl -X POST http://localhost:3000/me/tasks \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Bearer TUO_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"title":"Buy groceries","description":"Milk and bread","completed":false}'
+  -d '{"title":"Compra la spesa","description":"Latte e pane","completed":false}'
 ```
 
-### Validation & Error Handling
+### Validazione e Gestione Errori
 
-- Input validation via `class-validator` decorators on all DTOs
-- ValidationPipe configuration:
-  - `whitelist: true` — Strips unknown properties
-  - `forbidNonWhitelisted: true` — Rejects requests with unknown properties
-  - `transform: true` — Auto-converts primitive types (e.g., string IDs → numbers)
-- Proper HTTP error codes (400 for validation, 401 for auth, 404 for not found, 409 for conflicts)
+- Validazione degli input tramite decoratori `class-validator` su tutti i DTO
+- Configurazione ValidationPipe:
+  - `whitelist: true` — Rimuove proprietà sconosciute
+  - `forbidNonWhitelisted: true` — Rifiuta richieste con proprietà non ammesse
+  - `transform: true` — Converte automaticamente i tipi primitivi (es. ID stringa → numero)
+- Codici di errore HTTP appropriati (400 per validazione, 401 per autenticazione, 404 per non trovato, 409 per conflitti)
 
-### Swagger/OpenAPI Documentation
+### Documentazione Swagger/OpenAPI
 
-Interactive API documentation available at:
+Documentazione API interattiva disponibile su:
 
 ```
 http://localhost:3000/api
 ```
 
-Use Swagger UI to test all endpoints interactively.
+Usa Swagger UI per testare tutti gli endpoint in modo interattivo.
 
-### Postman Collection
+### Collection Postman
 
-A complete Postman collection is provided in `postman/todo-mr.postman_collection.json`. Import it into Postman and set the `baseUrl` variable to `http://localhost:3000`.
+Una collection Postman completa è fornita in `postman/todo-mr.postman_collection.json`. Importala in Postman e imposta la variabile `baseUrl` su `http://localhost:3000`.
 
-## Run tests
+## Esecuzione Test
 
 ```bash
-# Unit tests
+# Test unitari
 npm run test
 
-# Unit tests (watch mode)
+# Test unitari (modalità watch)
 npm run test:watch
 
-# Unit tests with coverage
+# Test unitari con copertura
 npm run test:cov
 
-# End-to-end tests (requires running DB)
+# Test end-to-end (richiede database in esecuzione)
+# Prima, avvia il database:
+docker compose up -d db
+
+# Poi esegui i test E2E:
 npm run test:e2e
 ```
 
-### Testing Strategy
+### Strategia di Testing
 
-- **Unit Tests**: Service logic with mocked dependencies (in `src/**/*.spec.ts`)
-- **E2E Tests**: Full HTTP requests against a real NestJS application instance (in `test/**/*.e2e-spec.ts`)
-- Tests use a fresh database instance for each test (synchronized automatically)
-- 8 test cases covering:
-  - User registration with duplicate email detection
-  - JWT login and profile retrieval
-  - Full CRUD on authenticated tasks
-  - Input validation and field whitelisting
-  - Access control (users can only see their own tasks)
+- **Test Unitari**: Logica dei servizi con dipendenze mockate (in `src/**/*.spec.ts`)
+  - 9 test unitari che coprono: UsersService, TasksService, AuthService
+- **Test E2E**: Richieste HTTP complete contro un'istanza reale dell'applicazione NestJS (in `test/**/*.e2e-spec.ts`)
+  - 19 test E2E che coprono workflow completi e scenari di sicurezza
+  - I test usano un'istanza database fresca per ogni test (sincronizzata automaticamente)
+- **Totale: 28 test** che coprono:
+  - Registrazione utente con rilevamento email duplicata
+  - Login JWT e recupero profilo
+  - Errori di autenticazione (password sbagliata, token invalidi, token mancanti)
+  - CRUD completo sui task autenticati
+  - Validazione input e whitelist dei campi
+  - Controllo accessi e isolamento risorse (gli utenti possono vedere/gestire solo i propri task)
+  - Scenari di sicurezza (tentativi di accesso cross-user)
 
 ## Docker & Docker Compose
 
-### Build the container
+### Build del Container
 
 ```bash
 docker compose build
 ```
 
-### Run with Docker Compose
+### Esecuzione con Docker Compose
 
 ```bash
 docker compose up -d
@@ -205,149 +232,168 @@ openssl rand -base64 32
 JWT_SECRET=your-secret-key docker compose up -d
 ```
 
-This starts:
-- **MySQL** database on port 3307
-- **NestJS app** on port 3000
+Questo avvia:
+- **MySQL** database sulla porta 3307
+- **App NestJS** sulla porta 3000
 
-The app will automatically sync the database schema on startup.
+L'app sincronizzerà automaticamente lo schema del database all'avvio.
 
 **Note di sicurezza per produzione:**
 - Cambia tutte le password di default nel `docker-compose.yml`
 - Usa un secret manager per gestire `JWT_SECRET` e password del database
 - Considera l'uso di `docker-compose.override.yml` per variabili d'ambiente locali (non committare questo file)
 
-### View logs
+### Visualizza i Log
 
 ```bash
 docker compose logs -f app
 ```
 
-### Stop services
+### Ferma i Servizi
 
 ```bash
 docker compose down
 ```
 
-### Container architecture
+### Architettura del Container
 
-The `Dockerfile` uses a two-stage build:
+Il `Dockerfile` utilizza un build multi-stage:
 
-1. **Build stage**: Installs all dependencies and compiles TypeScript
-2. **Runtime stage**: Uses only production dependencies and the compiled dist folder
+1. **Stage di build**: Installa tutte le dipendenze e compila TypeScript
+2. **Stage di runtime**: Usa solo le dipendenze di produzione e la cartella dist compilata
 
-This reduces the final image size significantly.
+Questo riduce significativamente la dimensione dell'immagine finale.
 
-## Code Structure & Architecture
+## Struttura del Codice e Architettura
 
 ```
 src/
-├── auth/                    # Authentication module (JWT, passport, login/register)
-│   ├── auth.controller.ts   # Register, login, profile endpoints
-│   ├── auth.service.ts      # Password validation, JWT signing
-│   ├── jwt.strategy.ts      # Passport JWT strategy
-│   ├── jwt.guard.ts         # @UseGuards(JwtAuthGuard) protection
+├── auth/                    # Modulo di autenticazione (JWT, passport, login/registrazione)
+│   ├── auth.controller.ts   # Endpoint di registrazione, login, profilo
+│   ├── auth.service.ts      # Validazione password, firma JWT
+│   ├── auth.service.spec.ts # Test unitari per AuthService
+│   ├── jwt.strategy.ts      # Strategia Passport JWT
+│   ├── jwt.guard.ts         # Protezione @UseGuards(JwtAuthGuard)
 │   ├── auth.module.ts
-│   └── dto/login.dto.ts
-├── users/                   # User management module
-│   ├── users.controller.ts  # User CRUD endpoints
-│   ├── users.service.ts     # User business logic & password hashing
-│   ├── user.model.ts        # Sequelize model
+│   ├── dto/login.dto.ts
+│   └── interfaces/jwt-payload.interface.ts
+├── users/                   # Modulo di gestione utenti
+│   ├── users.controller.ts  # Endpoint CRUD utenti
+│   ├── users.service.ts     # Logica di business utenti e hash password
+│   ├── users.service.spec.ts # Test unitari per UsersService
+│   ├── user.model.ts        # Modello Sequelize
 │   ├── users.module.ts
 │   └── dto/
 │       ├── create-user.dto.ts
 │       └── update-user.dto.ts
-├── tasks/                   # Task management module
-│   ├── tasks.controller.ts  # Admin task endpoints (public)
-│   ├── me.tasks.controller.ts # Protected endpoints (/me/tasks)
-│   ├── tasks.service.ts     # Task business logic
-│   ├── task.model.ts        # Sequelize model with FK to users
+├── tasks/                   # Modulo di gestione task
+│   ├── tasks.controller.ts  # Endpoint protetti (/me/tasks) per utenti autenticati
+│   ├── tasks.service.ts     # Logica di business task
+│   ├── tasks.service.spec.ts # Test unitari per TasksService
+│   ├── task.model.ts        # Modello Sequelize con FK a users
 │   ├── tasks.module.ts
 │   └── dto/
 │       ├── create-task.dto.ts
 │       └── update-task.dto.ts
-├── app.module.ts            # Root module (Sequelize config, imports)
-└── main.ts                  # Application bootstrap, ValidationPipe setup, Swagger config
+├── app.module.ts            # Modulo radice (configurazione Sequelize, import)
+└── main.ts                  # Bootstrap applicazione, setup ValidationPipe, configurazione Swagger
 
 test/
-├── app.e2e-spec.ts          # E2E tests for auth & full workflows
-├── auth.e2e-spec.ts         # E2E tests for authentication
-├── tasks.e2e-spec.ts        # E2E tests for task CRUD
-├── jest-e2e.json            # Jest config for e2e tests
-└── jest-e2e-setup.ts
+├── app.e2e-spec.ts          # Test E2E per autenticazione e workflow completi
+├── auth.e2e-spec.ts         # Test E2E per flussi di autenticazione
+├── auth-security.e2e-spec.ts # Test E2E per sicurezza autenticazione (errori, token invalidi)
+├── tasks.e2e-spec.ts        # Test E2E per operazioni CRUD sui task
+├── tasks-security.e2e-spec.ts # Test E2E per isolamento risorse task
+├── jest-e2e.json            # Configurazione Jest per test e2e
+└── jest-e2e-setup.ts        # Setup test E2E (configurazione database)
 ```
 
-### Design Patterns & Principles
+### Pattern di Design e Principi
 
-1. **Modular Architecture**: Separate modules for auth, users, and tasks with clear boundaries
-2. **Service Layer**: Business logic encapsulated in services, controllers handle HTTP
-3. **Dependency Injection**: NestJS IoC container for loose coupling
-4. **Repository-like Pattern**: Services wrap ORM operations
-5. **DTO Pattern**: Request/response shape validation with `class-validator`
-6. **Global Exception Handling**: NestJS built-in exception filters for consistent error responses
-7. **Stateless Authentication**: JWT tokens allow horizontal scaling without session storage
+1. **Architettura Modulare**: Moduli separati per auth, users e tasks con confini chiari
+2. **Service Layer**: Logica di business incapsulata nei servizi, i controller gestiscono HTTP
+3. **Dependency Injection**: Container IoC di NestJS per accoppiamento lasco
+4. **Pattern Repository-like**: I servizi incapsulano le operazioni ORM
+5. **Pattern DTO**: Validazione della forma di richiesta/risposta con `class-validator`
+6. **Gestione Eccezioni Globale**: Filtri eccezioni integrati di NestJS per risposte di errore consistenti
+7. **Autenticazione Stateless**: I token JWT permettono scalabilità orizzontale senza storage di sessioni
 
-## Key Implementation Decisions
+## Decisioni di Implementazione Chiave
 
-### Why this architecture?
+### Scelte Tecniche e Motivazioni
 
-1. **NestJS + Sequelize**: Enterprise-grade Node.js stack with excellent TypeScript support, testing utilities, and middleware ecosystem. Sequelize is mature and well-integrated.
+1. **Framework: NestJS**
+   - **Perché NestJS?** Framework enterprise-grade con supporto TypeScript nativo, dependency injection integrato, architettura modulare, e ottimo ecosistema per testing. Fornisce decorators, guards, interceptors e pipes che semplificano lo sviluppo di API robuste.
 
-2. **JWT over Sessions**: Stateless authentication enables easy horizontal scaling and works well with containerized environments. Tokens are signed and verified server-side.
+2. **ORM: Sequelize**
+   - **Perché Sequelize?** ORM maturo e ben documentato con forte supporto TypeScript tramite `sequelize-typescript`. Eccellente per database relazionali, API familiare, e integrazione seamless con NestJS tramite `@nestjs/sequelize`. Alternativa stabile e affidabile rispetto a TypeORM o Prisma.
 
-3. **Protected `/me/tasks` endpoints**: Separate controllers for admin CRUD (`/users/:id/tasks`) vs authenticated user operations (`/me/tasks`). This ensures users can only manage their own tasks through explicit authorization checks.
+3. **Database: MySQL 8.0**
+   - **Perché MySQL?** Database relazionale robusto, ampiamente utilizzato in produzione, con ottime performance e supporto per transazioni ACID. Facile da configurare e gestire, ideale per applicazioni che richiedono relazioni tra entità.
 
-4. **Bcrypt for passwords**: Industry-standard salted hashing. Never store plain-text passwords. Bcrypt is slow-by-design (10 salt rounds) to resist brute-force attacks.
+4. **Architettura: Modulare (Monolite)**
+   - **Perché architettura modulare?** Separazione chiara delle responsabilità (auth, users, tasks) con confini ben definiti. Facilita manutenzione, testing e scalabilità futura. Pattern service layer per incapsulare la logica di business.
 
-5. **Global ValidationPipe**: Centralized input validation across all endpoints. Prevents invalid data from reaching business logic.
+### Decisioni di Implementazione
 
-6. **Swagger/OpenAPI**: Auto-generated from decorators (@ApiProperty, @ApiTags). Easy to keep docs in sync with code.
+1. **NestJS + Sequelize**: Stack Node.js enterprise-grade con eccellente supporto TypeScript, utility di testing e ecosistema middleware. Sequelize è maturo e ben integrato.
 
-7. **Docker multi-stage builds**: Reduces image size by excluding dev dependencies and build artifacts from runtime layer.
+2. **JWT invece di Sessioni**: L'autenticazione stateless permette scalabilità orizzontale facile e funziona bene con ambienti containerizzati. I token sono firmati e verificati lato server.
 
-8. **Database auto-sync**: `synchronize: true` is convenient for development; production would use migrations (e.g., with `sequelize-cli`).
+3. **Endpoint protetti `/me/tasks`**: Tutte le operazioni sui task sono sotto `/me/tasks` e richiedono autenticazione JWT. Gli utenti possono gestire solo i propri task tramite controlli di autorizzazione espliciti che verificano la proprietà del task.
 
-## Performance & Production Considerations
+4. **Bcrypt per le password**: Hash salato standard del settore. Mai memorizzare password in chiaro. Bcrypt è lento per design (10 round di salt) per resistere ad attacchi brute-force.
 
-### For production deployments:
+5. **ValidationPipe Globale**: Validazione input centralizzata su tutti gli endpoint. Previene che dati invalidi raggiungano la logica di business.
 
-1. **Environment Configuration**: Use `.env` files or secret management (AWS Secrets Manager, HashiCorp Vault)
-2. **Database Migrations**: Replace `synchronize: true` with explicit migrations to maintain schema history
-3. **Connection Pooling**: Configure `Sequelize.connectionManager.pool` for MySQL connection reuse
-4. **Rate Limiting**: Add `@nestjs/throttler` to prevent brute-force attacks
-5. **Logging**: Replace console.log with structured logging (Winston, Bunyan)
-6. **Monitoring**: Integrate Application Performance Monitoring (APM) like New Relic or Datadog
-7. **Security**:
-   - Enable HTTPS/TLS
-   - Use environment-specific secrets
-   - Implement CORS appropriately
-   - Add helmet.js for HTTP security headers
-   - Validate JWT expiration
+6. **Swagger/OpenAPI**: Generato automaticamente dai decoratori (@ApiProperty, @ApiTags). Facile mantenere la documentazione sincronizzata con il codice.
 
-### Database Optimization:
+7. **Build Docker multi-stage**: Riduce la dimensione dell'immagine escludendo dipendenze dev e artefatti di build dallo stage di runtime.
 
-- Add database indices on frequently queried columns (e.g., `users.email`, `tasks.userId`)
-- Consider caching strategy for frequently accessed data (Redis)
-- Profile slow queries with MySQL's `slow_query_log`
+8. **Sincronizzazione database automatica**: `synchronize: true` è conveniente per lo sviluppo; in produzione si userebbero migrazioni (es. con `sequelize-cli`).
 
-## Linting & Formatting
+## Considerazioni su Performance e Produzione
+
+### Per deployment in produzione:
+
+1. **Configurazione Ambiente**: Usa file `.env` o gestione segreti (AWS Secrets Manager, HashiCorp Vault)
+2. **Migrazioni Database**: Sostituisci `synchronize: true` con migrazioni esplicite per mantenere la cronologia dello schema
+3. **Connection Pooling**: Configura `Sequelize.connectionManager.pool` per il riutilizzo delle connessioni MySQL
+4. **Rate Limiting**: Aggiungi `@nestjs/throttler` per prevenire attacchi brute-force
+5. **Logging**: Sostituisci console.log con logging strutturato (Winston, Bunyan)
+6. **Monitoring**: Integra Application Performance Monitoring (APM) come New Relic o Datadog
+7. **Sicurezza**:
+   - Abilita HTTPS/TLS
+   - Usa segreti specifici per ambiente
+   - Implementa CORS appropriatamente
+   - Aggiungi helmet.js per header di sicurezza HTTP
+   - Valida la scadenza JWT
+
+### Ottimizzazione Database:
+
+- Aggiungi indici database su colonne frequentemente interrogate (es. `users.email`, `tasks.userId`)
+- Considera una strategia di caching per dati frequentemente accessibili (Redis)
+- Profila query lente con `slow_query_log` di MySQL
+
+## Linting e Formattazione
 
 ```bash
-# Run ESLint with auto-fix
+# Esegui ESLint con auto-fix
 npm run lint
 
-# Format code with Prettier
+# Formatta il codice con Prettier
 npm run format
 ```
 
-## Resources
+## Risorse
 
-- [NestJS Documentation](https://docs.nestjs.com)
-- [Sequelize Documentation](https://sequelize.org)
-- [Passport.js JWT Strategy](http://www.passportjs.org/packages/passport-jwt/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Docker Documentation](https://docs.docker.com)
-- [Jest Testing Framework](https://jestjs.io)
+- [Documentazione NestJS](https://docs.nestjs.com)
+- [Documentazione Sequelize](https://sequelize.org)
+- [Strategia JWT Passport.js](http://www.passportjs.org/packages/passport-jwt/)
+- [Manuale TypeScript](https://www.typescriptlang.org/docs/)
+- [Documentazione Docker](https://docs.docker.com)
+- [Framework di Testing Jest](https://jestjs.io)
 
 ---
 
-**License**: UNLICENSED (update as needed)
+**Licenza**: UNLICENSED (aggiorna se necessario)
