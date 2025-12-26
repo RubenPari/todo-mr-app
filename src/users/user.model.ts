@@ -1,7 +1,7 @@
 /**
  * Modello Sequelize che rappresenta un utente dell'applicazione.
  * Ogni utente può avere più task associati tramite una relazione one-to-many.
- * 
+ *
  * Il modello utilizza uno scope di default che esclude il campo password
  * dalle query standard per motivi di sicurezza. Per includere la password
  * è necessario utilizzare esplicitamente lo scope 'withPassword'.

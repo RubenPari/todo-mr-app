@@ -47,7 +47,7 @@ describe('AuthService', () => {
   });
 
   describe('validateUser', () => {
-    it('dovrebbe lanciare UnauthorizedException quando l\'email non esiste', async () => {
+    it("dovrebbe lanciare UnauthorizedException quando l'email non esiste", async () => {
       usersService.findByEmailWithPassword.mockResolvedValue(null);
 
       await expect(
@@ -69,10 +69,13 @@ describe('AuthService', () => {
         service.validateUser('test@example.com', 'wrongPassword'),
       ).rejects.toBeInstanceOf(UnauthorizedException);
 
-      expect(bcryptCompare).toHaveBeenCalledWith('wrongPassword', user.password);
+      expect(bcryptCompare).toHaveBeenCalledWith(
+        'wrongPassword',
+        user.password,
+      );
     });
 
-    it('dovrebbe restituire l\'utente quando le credenziali sono valide', async () => {
+    it("dovrebbe restituire l'utente quando le credenziali sono valide", async () => {
       const user = {
         id: 1,
         email: 'test@example.com',
@@ -123,4 +126,3 @@ describe('AuthService', () => {
     });
   });
 });
-

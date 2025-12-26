@@ -130,4 +130,3 @@ describe('Auth Security (e2e)', () => {
       .expect(400);
   });
 });
-

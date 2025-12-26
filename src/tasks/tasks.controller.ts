@@ -19,6 +19,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt.guard';
+import { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -37,7 +38,10 @@ export class TasksController {
    * @returns Il task creato
    */
   @Post()
-  create(@Request() req: any, @Body() dto: CreateTaskDto) {
+  create(
+    @Request() req: { user: AuthenticatedUser },
+    @Body() dto: CreateTaskDto,
+  ) {
     return this.tasksService.createForUser(req.user.userId, dto);
   }
 
@@ -48,7 +52,7 @@ export class TasksController {
    * @returns Array di tutti i task dell'utente
    */
   @Get()
-  findAll(@Request() req: any) {
+  findAll(@Request() req: { user: AuthenticatedUser }) {
     return this.tasksService.findAllForUser(req.user.userId);
   }
 
@@ -64,7 +68,7 @@ export class TasksController {
    */
   @Get(':id')
   async findOne(
-    @Request() req: any,
+    @Request() req: { user: AuthenticatedUser },
     @Param('id', ParseIntPipe) id: number,
   ) {
     const task = await this.tasksService.findOne(id);
@@ -86,7 +90,7 @@ export class TasksController {
    */
   @Patch(':id')
   async update(
-    @Request() req: any,
+    @Request() req: { user: AuthenticatedUser },
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTaskDto,
   ) {
@@ -108,7 +112,7 @@ export class TasksController {
   @Delete(':id')
   @HttpCode(204)
   async remove(
-    @Request() req: any,
+    @Request() req: { user: AuthenticatedUser },
     @Param('id', ParseIntPipe) id: number,
   ) {
     const task = await this.tasksService.findOne(id);
@@ -118,4 +122,3 @@ export class TasksController {
     await this.tasksService.remove(id);
   }
 }
-

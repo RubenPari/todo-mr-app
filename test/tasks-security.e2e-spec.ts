@@ -170,7 +170,7 @@ describe('Tasks Security - Resource Isolation (e2e)', () => {
       .expect(200);
   });
 
-  it('GET /me/tasks restituisce solo i task dell\'utente autenticato', async () => {
+  it("GET /me/tasks restituisce solo i task dell'utente autenticato", async () => {
     const server = app.getHttpServer();
 
     // Crea utente A
@@ -242,4 +242,3 @@ describe('Tasks Security - Resource Isolation (e2e)', () => {
     expect(listB.body).toHaveLength(1);
   });
 });
-

@@ -13,6 +13,7 @@ import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt.guard';
+import { AuthenticatedUser } from './interfaces/jwt-payload.interface';
 
 /**
  * Controller per la gestione dell'autenticazione e registrazione utenti.
@@ -62,7 +63,7 @@ export class AuthController {
    */
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async me(@Request() req: any) {
+  async me(@Request() req: { user: AuthenticatedUser }) {
     return this.users.findOne(req.user.userId);
   }
 }
