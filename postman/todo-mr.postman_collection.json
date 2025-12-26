@@ -3,9 +3,112 @@
     "_postman_id": "8e4b3c3e-5c2a-4b0d-9c7e-111111111111",
     "name": "Todo MR API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Collection per CRUD utenti e task (NestJS + MySQL). Variabile baseUrl per ambiente locale."
+    "description": "Collection completa per l'API Todo MR (NestJS + MySQL + JWT). Include autenticazione e gestione task protetti. Variabile baseUrl per ambiente locale."
   },
   "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.test(\"User registered successfully\", function () {",
+                  "        pm.expect(pm.response.code).to.equal(201);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mario Rossi\",\n  \"email\": \"mario.rossi@example.com\",\n  \"password\": \"Str0ngP@ssw0rd\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registra un nuovo utente nel sistema. La password viene hashata automaticamente."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.environment.set(\"jwt_token\", jsonData.access_token);",
+                  "    pm.collectionVariables.set(\"jwt_token\", jsonData.access_token);",
+                  "    pm.test(\"Login successful and token saved\", function () {",
+                  "        pm.expect(pm.response.code).to.equal(200);",
+                  "        pm.expect(jsonData).to.have.property(\"access_token\");",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mario.rossi@example.com\",\n  \"password\": \"Str0ngP@ssw0rd\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica un utente e ottiene un token JWT. Il token viene salvato automaticamente nella variabile jwt_token."
+          }
+        },
+        {
+          "name": "Get Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Restituisce il profilo dell'utente autenticato. Richiede un token JWT valido."
+          }
+        }
+      ],
+      "description": "Endpoint per l'autenticazione: registrazione, login e recupero profilo utente."
+    },
     {
       "name": "Users",
       "item": [
@@ -21,17 +124,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Mario Rossi\",\n  \"email\": \"mario.rossi@example.com\"\n}"
+              "raw": "{\n  \"name\": \"Mario Rossi\",\n  \"email\": \"mario.rossi@example.com\",\n  \"password\": \"Str0ngP@ssw0rd\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users"
-              ]
-            }
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Crea un nuovo utente. Endpoint pubblico (senza autenticazione)."
           }
         },
         {
@@ -41,13 +141,10 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/users",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users"
-              ]
-            }
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Restituisce la lista di tutti gli utenti. Endpoint pubblico."
           }
         },
         {
@@ -57,14 +154,16 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                ":id"
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
               ]
-            }
+            },
+            "description": "Restituisce un utente specifico per ID. Endpoint pubblico."
           }
         },
         {
@@ -83,14 +182,16 @@
             },
             "url": {
               "raw": "{{baseUrl}}/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                ":id"
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
               ]
-            }
+            },
+            "description": "Aggiorna un utente esistente. Endpoint pubblico."
           }
         },
         {
@@ -100,81 +201,93 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/users/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                ":id"
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
               ]
-            }
+            },
+            "description": "Elimina un utente. Endpoint pubblico."
           }
         }
-      ]
+      ],
+      "description": "Endpoint pubblici per la gestione degli utenti (CRUD completo)."
     },
     {
       "name": "Tasks",
       "item": [
         {
-          "name": "Create task for user",
+          "name": "Create task",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Compra il latte\",\n  \"description\": \"Ricordati di comprare il latte\",\n  \"completed\": false\n}"
+              "raw": "{\n  \"title\": \"Compra il latte\",\n  \"description\": \"Ricordati di comprare il latte al supermercato\",\n  \"completed\": false\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/users/:userId/tasks",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                ":userId",
-                "tasks"
-              ]
-            }
+              "raw": "{{baseUrl}}/me/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "tasks"]
+            },
+            "description": "Crea un nuovo task per l'utente autenticato. Richiede token JWT valido."
           }
         },
         {
-          "name": "List tasks for user",
+          "name": "List my tasks",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/users/:userId/tasks",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                ":userId",
-                "tasks"
-              ]
-            }
+              "raw": "{{baseUrl}}/me/tasks",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "tasks"]
+            },
+            "description": "Restituisce tutti i task dell'utente autenticato. Richiede token JWT valido."
           }
         },
         {
           "name": "Get task by id",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/tasks/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks",
-                ":id"
+              "raw": "{{baseUrl}}/me/tasks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "tasks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
               ]
-            }
+            },
+            "description": "Restituisce un task specifico dell'utente autenticato. Se il task appartiene a un altro utente, restituisce 404. Richiede token JWT valido."
           }
         },
         {
@@ -185,6 +298,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
               }
             ],
             "body": {
@@ -192,35 +310,46 @@
               "raw": "{\n  \"title\": \"Nuovo titolo\",\n  \"completed\": true\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/tasks/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks",
-                ":id"
+              "raw": "{{baseUrl}}/me/tasks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "tasks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
               ]
-            }
+            },
+            "description": "Aggiorna un task dell'utente autenticato. Se il task appartiene a un altro utente, restituisce 404. Richiede token JWT valido."
           }
         },
         {
           "name": "Delete task",
           "request": {
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/tasks/:id",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "tasks",
-                ":id"
+              "raw": "{{baseUrl}}/me/tasks/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "tasks", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
               ]
-            }
+            },
+            "description": "Elimina un task dell'utente autenticato. Se il task appartiene a un altro utente, restituisce 404. Richiede token JWT valido."
           }
         }
-      ]
+      ],
+      "description": "Endpoint protetti per la gestione dei task dell'utente autenticato. Tutti gli endpoint richiedono autenticazione JWT."
     },
     {
       "name": "Docs",
@@ -232,13 +361,10 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api"
-              ]
-            }
+              "host": ["{{baseUrl}}"],
+              "path": ["api"]
+            },
+            "description": "Documentazione interattiva Swagger/OpenAPI dell'API."
           }
         }
       ]
@@ -247,7 +373,13 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000"
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
     }
   ]
 }
