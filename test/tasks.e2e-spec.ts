@@ -101,6 +101,13 @@ describe('Tasks CRUD (e2e)', () => {
 
     const email = `tasks-validate-${Date.now()}@example.com`;
     const password = 'Str0ngP@ssw0rd';
+    
+    // Registra l'utente prima del login
+    await request(server)
+      .post('/auth/register')
+      .send({ name: 'User Validate', email, password })
+      .expect(201);
+    
     const login = await request(server)
       .post('/auth/login')
       .send({ email, password })
@@ -170,6 +177,12 @@ describe('Tasks CRUD (e2e)', () => {
 
     const email = `tasks-notfound-${Date.now()}@example.com`;
     const password = 'Str0ngP@ssw0rd';
+
+    // Registra l'utente prima del login
+    await request(server)
+      .post('/auth/register')
+      .send({ name: 'User NotFound', email, password })
+      .expect(201);
 
     const login = await request(server)
       .post('/auth/login')
