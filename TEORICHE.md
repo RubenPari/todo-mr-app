@@ -56,8 +56,21 @@ export class CreateUserDto {
 
 ### Altro esempio: Decorators personalizzati
 
+Nel progetto, usiamo il decorator `@Request()` fornito da NestJS per accedere all'utente autenticato:
+
 ```typescript
-// Custom decorator per verificare ownership
+// src/tasks/tasks.controller.ts
+@Get()
+@UseGuards(JwtAuthGuard)
+findAll(@Request() req: { user: AuthenticatedUser }) {
+  return this.tasksService.findAllForUser(req.user.userId);
+}
+```
+
+**Esempio teorico**: Potremmo creare un decorator personalizzato per semplificare l'accesso all'utente:
+
+```typescript
+// Custom decorator per estrarre l'utente autenticato
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export const CurrentUser = createParamDecorator(
@@ -67,10 +80,10 @@ export const CurrentUser = createParamDecorator(
   },
 );
 
-// Utilizzo nel controller
+// Utilizzo semplificato nel controller
 @Get('me')
 @UseGuards(JwtAuthGuard)
-getProfile(@CurrentUser() user: any) {
+getProfile(@CurrentUser() user: AuthenticatedUser) {
   return user;
 }
 ```
@@ -231,86 +244,188 @@ export class AppModule implements NestModule {
 
 ## 3. Racconta un errore o difficoltà che hai incontrato usando Node.js e come lo hai risolto.
 
-### Il Problema: Colonna Mancante nel Database During Alterations
+### Il Problema: Ecosistema Non Omogeneo e Configurazioni Complesse
 
 #### Scenario
 
-Stavo aggiungendo una nuova feature di autenticazione al progetto **todo-mr-app**. Avevo:
-1. Aggiunto il campo `password` al modello `User` in Sequelize
-2. Aggiornato il DTO `CreateUserDto` per richiedere una password
-3. Aggiunto hashing bcrypt nel service
+Durante lo sviluppo del progetto **todo-mr-app** con NestJS e TypeScript, ho incontrato una difficoltà ricorrente: **far combaciare correttamente tutti gli strumenti, standard e configurazioni** per ottenere codice pulito, efficiente, che compili senza errori e senza warning.
 
-Però quando ho eseguito i test e2e, ho ricevuto questo errore:
-
-```
-Error: Unknown column 'password' in 'field list'
-```
+Node.js, specialmente in un contesto enterprise con framework strutturati come NestJS, presenta una sfida particolare: l'ecosistema è composto da **strumenti e standard non omogenei e non centralizzati**, che devono essere configurati e fatti interagire manualmente.
 
 #### Root Cause Analysis
 
-Il problema era che:
-- Il file `package.json` prima definiva `synchronize: true` per auto-sincronizzare il DB
-- Ma il container Docker/DB era stato creato **prima** con il vecchio schema (senza colonna `password`)
-- Sequelize cercava di inserire dati in una colonna inesistente
+Il problema principale risiede nella natura frammentata dell'ecosistema Node.js:
 
-#### Soluzione (Passo 1): Drop del Database
+1. **TypeScript Configuration**: `tsconfig.json` con diverse opzioni (`strict`, `esModuleInterop`, `skipLibCheck`, ecc.) che devono essere allineate con le versioni di TypeScript e dei tipi delle dipendenze.
 
-```bash
-docker compose down
-docker compose up -d
-```
+2. **ESLint + Prettier**: Due strumenti separati che devono essere configurati insieme:
+   - `eslint.config.js` o `.eslintrc.json` per le regole di linting
+   - `.prettierrc` per la formattazione
+   - `eslint-config-prettier` per evitare conflitti
+   - Spesso conflitti tra regole ESLint e formattazione Prettier
 
-Questo ha:
-- Arrestato i container
-- Eliminato il volume persistente
-- Ricreato everything da zero con il nuovo schema
+3. **Type Definitions**: Le definizioni dei tipi (`@types/*`) devono essere compatibili con:
+   - La versione di TypeScript
+   - Le versioni delle librerie runtime
+   - Le versioni di altre `@types/*` packages
 
-#### Soluzione (Passo 2): Validazione dei Modelli
+4. **Module Systems**: Coesistenza di:
+   - CommonJS (`require/module.exports`)
+   - ES Modules (`import/export`)
+   - TypeScript module resolution (`module`, `moduleResolution` in `tsconfig.json`)
 
-Aggiunto uno script di verifica nel `main.ts`:
+5. **Build Tools**: Configurazioni separate per:
+   - TypeScript compiler (`tsc`)
+   - NestJS build system
+   - Testing framework (Jest con `ts-jest` o `@swc/jest`)
+
+#### Esempio Concreto di Problema
+
+Durante la configurazione iniziale del progetto, ho incontrato questo scenario:
 
 ```typescript
-async function bootstrap() {
-  // ...
-  const sequelize = app.get(Sequelize);
-  
-  // Sync automatica (solo sviluppo)
-  if (process.env.NODE_ENV !== 'production') {
-    await sequelize.sync({ alter: process.env.DB_ALTER === 'true' });
+// Errore di compilazione TypeScript
+import { Request } from 'express';
+// Error: Module '"express"' has no exported member 'Request'.
+```
+
+**Problema**: Le definizioni dei tipi di Express (`@types/express`) non erano allineate con la versione di Express installata, o la configurazione di TypeScript non permetteva la risoluzione corretta dei tipi.
+
+**Soluzione richiesta**:
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,  // Evita controlli sui tipi delle dipendenze
+    "moduleResolution": "node",
+    "resolveJsonModule": true
   }
-  // ...
 }
 ```
 
-#### Soluzione (Passo 3): Lesson Learned
+E aggiornare le dipendenze:
+```bash
+npm install --save-dev @types/express@^4.17.21
+```
 
-Per il futuro, avrei dovuto:
+#### Altro Esempio: Conflitto ESLint + Prettier
 
-1. **Usare Migrazioni** (non `synchronize`) per produzione:
-   ```bash
-   npm install sequelize-cli --save-dev
-   npx sequelize-cli migration:create --name add-password-to-users
-   ```
+```bash
+# Warning durante il commit
+ESLint: Expected indentation of 2 spaces but found 4
+Prettier: Replace '··' with '····'
+```
 
-2. **Implementare Health Checks**:
-   ```typescript
-   @Get('/health')
-   health() {
-     return { status: 'ok', timestamp: new Date() };
-   }
-   ```
+**Problema**: ESLint e Prettier avevano regole di indentazione contrastanti.
 
-3. **Versioning dello Schema**: Mantenere un file di versione che dice quale versione del DB ci si aspetta
+**Soluzione**:
+```json
+// .eslintrc.json
+{
+  "extends": [
+    "plugin:prettier/recommended"  // Disabilita regole ESLint che confliggono con Prettier
+  ]
+}
+```
+
+```json
+// .prettierrc
+{
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+
+#### Soluzione: Approccio Sistematico
+
+Per risolvere questi problemi in modo strutturato:
+
+**1. Documentare le Versioni**
+
+Creare un file `versions.md` o sezione nel `README.md` che documenta le versioni compatibili:
+
+```markdown
+## Versioni Testate e Compatibili
+
+- Node.js: 18.x / 20.x
+- TypeScript: 5.3.x
+- NestJS: 10.x
+- @types/node: 20.x
+- ESLint: 8.x
+- Prettier: 3.x
+```
+
+**2. Script di Verifica**
+
+Aggiungere script npm per verificare la configurazione:
+
+```json
+// package.json
+{
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "format:check": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "validate": "npm run type-check && npm run lint && npm run format:check"
+  }
+}
+```
+
+**3. Configurazione Centralizzata**
+
+Usare file di configurazione condivisi quando possibile:
+
+```json
+// tsconfig.base.json (configurazione base)
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
+```
+
+```json
+// tsconfig.json (estende la base)
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist"
+  }
+}
+```
+
+**4. CI/CD Validation**
+
+Aggiungere controlli automatici in CI/CD:
+
+```yaml
+# .github/workflows/ci.yml
+- name: Type Check
+  run: npm run type-check
+  
+- name: Lint
+  run: npm run lint
+  
+- name: Format Check
+  run: npm run format:check
+```
 
 ### Il Takeaway
 
-**Non presupporre che il database sia sempre in sync con il codice.** In un ambiente di produzione:
-- Usa **migrazioni esplicite**
-- Versiona il tuo schema
-- Testa le migrazioni localmente
-- Implementa rollback plans
+**Node.js, specialmente in contesti enterprise TypeScript, richiede un approccio metodico alla configurazione.** A differenza di ecosistemi più centralizzati (come .NET o Java), Node.js richiede di:
 
-Nel nostro caso, il fix è stato rapido perché eravamo in sviluppo. In produzione, avremmo avuto bisogno di una **migrazione reversibile** senza perdita dati.
+1. **Documentare le versioni compatibili** di tutti gli strumenti
+2. **Configurare manualmente l'interoperabilità** tra TypeScript, ESLint, Prettier, e build tools
+3. **Verificare regolarmente** che tutto compili senza warning
+4. **Usare strumenti di validazione** (type-check, lint, format-check) prima di ogni commit
+5. **Mantenere aggiornate** le dipendenze in modo controllato, testando la compatibilità
+
+La mancanza di omogeneità e centralizzazione dell'ecosistema Node.js può essere una seccatura, ma con un approccio sistematico e documentazione accurata, è possibile mantenere un codice pulito, efficiente e senza warning anche in progetti enterprise complessi.
 
 ---
 
@@ -355,7 +470,7 @@ npm install newrelic              # APM (Application Performance Monitoring)
 
 ```typescript
 // metrics.middleware.ts
-import { promClient } from 'prom-client';
+import * as promClient from 'prom-client';
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
@@ -471,18 +586,18 @@ export class RedisService {
 // tasks.controller.ts - Implementa caching
 @Get('me/tasks')
 @UseGuards(JwtAuthGuard)
-async listForMe(@Request() req: any) {
+async findAll(@Request() req: { user: AuthenticatedUser }) {
   const cacheKey = `user:${req.user.userId}:tasks`;
   
   // 1. Prova cache
-  const cached = await this.redis.get(cacheKey);
+  const cached = await this.redisService.get<Task[]>(cacheKey);
   if (cached) return cached;
   
   // 2. Se miss, query DB
   const tasks = await this.tasksService.findAllForUser(req.user.userId);
   
   // 3. Cache result per 5 minuti
-  await this.redis.set(cacheKey, tasks, 300);
+  await this.redisService.set(cacheKey, tasks, 300);
   
   return tasks;
 }
@@ -506,23 +621,39 @@ findAllForUser(userId: number): Promise<Task[]> {
 
 **3. Scaling Horizontal**
 
-```dockerfile
-# Usa clustering in Node.js
-const cluster = require('cluster');
-const os = require('os');
+```typescript
+// Usa clustering in Node.js per sfruttare tutti i core CPU
+import cluster from 'cluster';
+import os from 'os';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
 
-if (cluster.isMaster) {
+if (cluster.isPrimary) {
   // Fork worker per ogni CPU core
   const numWorkers = os.cpus().length;
+  console.log(`Master ${process.pid} is running`);
+  console.log(`Starting ${numWorkers} workers...`);
+  
   for (let i = 0; i < numWorkers; i++) {
     cluster.fork();
   }
+  
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`Worker ${worker.process.pid} died. Restarting...`);
+    cluster.fork();
+  });
 } else {
   // Worker process
-  const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+  async function bootstrap() {
+    const app = await NestFactory.create(AppModule);
+    await app.listen(3000);
+    console.log(`Worker ${process.pid} started`);
+  }
+  bootstrap();
 }
 ```
+
+**Nota**: `cluster.isPrimary` è la sintassi corretta per Node.js 16+ (sostituisce il deprecato `cluster.isMaster`).
 
 **4. Load Testing con Autocannon**
 
