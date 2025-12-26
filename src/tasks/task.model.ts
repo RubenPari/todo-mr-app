@@ -1,5 +1,9 @@
-// Modello Sequelize che rappresenta un task (elemento della to-do list).
-// Ogni task appartiene a un utente.
+/**
+ * Modello Sequelize che rappresenta un task (elemento della to-do list).
+ * Ogni task appartiene a un utente tramite una relazione many-to-one.
+ * Quando l'utente proprietario viene eliminato, il task viene eliminato
+ * automaticamente grazie alla configurazione CASCADE.
+ */
 import {
   Table,
   Column,
@@ -15,13 +19,15 @@ import type {
 } from 'sequelize';
 import { User } from '../users/user.model';
 
-// Definisce la tabella "tasks" nel database.
 @Table({ tableName: 'tasks' })
 export class Task extends Model<
   InferAttributes<Task>,
   InferCreationAttributes<Task>
 > {
-  // Chiave primaria incrementale del task.
+  /**
+   * Chiave primaria incrementale del task.
+   * Viene generata automaticamente dal database.
+   */
   @Column({
     type: DataType.INTEGER,
     autoIncrement: true,
@@ -29,21 +35,30 @@ export class Task extends Model<
   })
   declare id: CreationOptional<number>;
 
-  // Titolo breve del task.
+  /**
+   * Titolo breve del task.
+   * Campo obbligatorio che descrive sinteticamente il task.
+   */
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
   declare title: string;
 
-  // Descrizione testuale dettagliata (opzionale).
+  /**
+   * Descrizione testuale dettagliata del task.
+   * Campo opzionale che può contenere informazioni aggiuntive.
+   */
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
   declare description: CreationOptional<string | null>;
 
-  // Flag che indica se il task è stato completato.
+  /**
+   * Flag che indica se il task è stato completato.
+   * Di default è impostato a false quando viene creato un nuovo task.
+   */
   @Column({
     type: DataType.BOOLEAN,
     allowNull: false,
@@ -51,7 +66,12 @@ export class Task extends Model<
   })
   declare completed: CreationOptional<boolean>;
 
-  // Chiave esterna che collega il task all'utente proprietario.
+  /**
+   * Chiave esterna che collega il task all'utente proprietario.
+   * Riferimento alla tabella 'users' tramite il campo 'id'.
+   * Configurato con CASCADE per eliminare/aggiornare automaticamente
+   * quando l'utente viene eliminato o aggiornato.
+   */
   @ForeignKey(() => User)
   @Column({
     type: DataType.INTEGER,
@@ -63,9 +83,11 @@ export class Task extends Model<
   })
   declare userId: number;
 
-  // Relazione di appartenenza: il task appartiene a un utente.
-  // onDelete/onUpdate a livello di associazione garantiscono che la FK
-  // venga aggiornata/cancellata correttamente quando cambia l'utente.
+  /**
+   * Relazione many-to-one: il task appartiene a un utente.
+   * Configurata con CASCADE per garantire l'integrità referenziale
+   * quando l'utente viene eliminato o aggiornato.
+   */
   @BelongsTo(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   user?: User;
 }

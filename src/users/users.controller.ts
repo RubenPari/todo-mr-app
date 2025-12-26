@@ -1,5 +1,7 @@
-// Controller HTTP per la risorsa "User".
-// Espone endpoint REST per creare, leggere, aggiornare ed eliminare utenti.
+/**
+ * Controller HTTP per la risorsa "User".
+ * Espone endpoint REST per creare, leggere, aggiornare ed eliminare utenti.
+ */
 import {
   Body,
   Controller,
@@ -22,28 +24,50 @@ import { User } from './user.model';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // Crea un nuovo utente.
+  /**
+   * Crea un nuovo utente nel sistema.
+   *
+   * @param dto - Dati dell'utente da creare
+   * @returns L'utente creato (senza password)
+   */
   @Post()
   @ApiCreatedResponse({ type: User })
   create(@Body() dto: CreateUserDto): Promise<User> {
     return this.usersService.create(dto);
   }
 
-  // Restituisce la lista completa degli utenti.
+  /**
+   * Restituisce la lista completa di tutti gli utenti.
+   *
+   * @returns Array di tutti gli utenti registrati
+   */
   @Get()
   @ApiOkResponse({ type: [User] })
   findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
 
-  // Restituisce un singolo utente per id.
+  /**
+   * Restituisce un singolo utente identificato dal suo ID.
+   *
+   * @param id - ID numerico dell'utente
+   * @returns L'utente trovato
+   * @throws {NotFoundException} Se l'utente non esiste
+   */
   @Get(':id')
   @ApiOkResponse({ type: User })
   findOne(@Param('id', ParseIntPipe) id: number): Promise<User> {
     return this.usersService.findOne(id);
   }
 
-  // Aggiorna un utente esistente.
+  /**
+   * Aggiorna un utente esistente con i dati forniti.
+   *
+   * @param id - ID dell'utente da aggiornare
+   * @param dto - Dati parziali da applicare all'utente
+   * @returns L'utente aggiornato
+   * @throws {NotFoundException} Se l'utente non esiste
+   */
   @Patch(':id')
   @ApiOkResponse({ type: User })
   update(
@@ -53,7 +77,12 @@ export class UsersController {
     return this.usersService.update(id, dto);
   }
 
-  // Elimina un utente.
+  /**
+   * Elimina definitivamente un utente dal sistema.
+   *
+   * @param id - ID dell'utente da eliminare
+   * @throws {NotFoundException} Se l'utente non esiste
+   */
   @Delete(':id')
   @HttpCode(204)
   @ApiOkResponse({ description: 'User deleted' })

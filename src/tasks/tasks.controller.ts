@@ -1,6 +1,8 @@
-// Controller HTTP per la risorsa "Task".
-// Espone endpoint REST per creare, leggere, aggiornare ed eliminare task,
-// inclusi endpoint annidati sotto uno specifico utente.
+/**
+ * Controller HTTP per la risorsa "Task".
+ * Espone endpoint REST per creare, leggere, aggiornare ed eliminare task,
+ * inclusi endpoint annidati sotto uno specifico utente.
+ */
 import {
   Body,
   Controller,
@@ -23,7 +25,14 @@ import { Task } from './task.model';
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
-  // Crea un nuovo task per l'utente specificato.
+  /**
+   * Crea un nuovo task per l'utente specificato.
+   *
+   * @param userId - ID dell'utente proprietario del task
+   * @param dto - Dati del task da creare
+   * @returns Il task creato
+   * @throws {NotFoundException} Se l'utente specificato non esiste
+   */
   @Post('users/:userId/tasks')
   @ApiCreatedResponse({ type: Task })
   createForUser(
@@ -33,7 +42,12 @@ export class TasksController {
     return this.tasksService.createForUser(userId, dto);
   }
 
-  // Restituisce tutti i task dell'utente specificato.
+  /**
+   * Restituisce tutti i task dell'utente specificato.
+   *
+   * @param userId - ID dell'utente di cui recuperare i task
+   * @returns Array di tutti i task dell'utente
+   */
   @Get('users/:userId/tasks')
   @ApiOkResponse({ type: [Task] })
   findAllForUser(
@@ -42,14 +56,27 @@ export class TasksController {
     return this.tasksService.findAllForUser(userId);
   }
 
-  // Restituisce un singolo task per id.
+  /**
+   * Restituisce un singolo task identificato dal suo ID.
+   *
+   * @param id - ID numerico del task
+   * @returns Il task trovato
+   * @throws {NotFoundException} Se il task non esiste
+   */
   @Get('tasks/:id')
   @ApiOkResponse({ type: Task })
   findOne(@Param('id', ParseIntPipe) id: number): Promise<Task> {
     return this.tasksService.findOne(id);
   }
 
-  // Aggiorna un task esistente.
+  /**
+   * Aggiorna un task esistente con i dati forniti.
+   *
+   * @param id - ID del task da aggiornare
+   * @param dto - Dati parziali da applicare al task
+   * @returns Il task aggiornato
+   * @throws {NotFoundException} Se il task non esiste
+   */
   @Patch('tasks/:id')
   @ApiOkResponse({ type: Task })
   update(
@@ -59,7 +86,12 @@ export class TasksController {
     return this.tasksService.update(id, dto);
   }
 
-  // Elimina un task.
+  /**
+   * Elimina definitivamente un task dal sistema.
+   *
+   * @param id - ID del task da eliminare
+   * @throws {NotFoundException} Se il task non esiste
+   */
   @Delete('tasks/:id')
   @HttpCode(204)
   @ApiOkResponse({ description: 'Task deleted' })

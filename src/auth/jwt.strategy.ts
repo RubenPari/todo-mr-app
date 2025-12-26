@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+/**
+ * Strategia Passport per la validazione dei token JWT.
+ * Estrae il token dall'header Authorization e lo valida usando la chiave segreta.
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
@@ -12,8 +16,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  /**
+   * Valida il payload del token JWT e restituisce i dati dell'utente.
+   * Questo metodo viene chiamato automaticamente da Passport dopo la validazione del token.
+   *
+   * @param payload - Payload decodificato del token JWT
+   * @returns Oggetto contenente i dati minimi dell'utente da allegare alla richiesta
+   */
   validate(payload: any) {
-    // Attach minimal user info to request
     return { userId: payload.sub, email: payload.email };
   }
 }
