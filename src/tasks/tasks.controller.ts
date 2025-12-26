@@ -1,7 +1,7 @@
 /**
- * Controller HTTP per la risorsa "Task".
- * Espone endpoint REST per creare, leggere, aggiornare ed eliminare task,
- * inclusi endpoint annidati sotto uno specifico utente.
+ * Controller HTTP per la gestione dei task dell'utente autenticato.
+ * Tutti gli endpoint richiedono autenticazione JWT e permettono all'utente
+ * di gestire solo i propri task, garantendo l'isolamento delle risorse.
  */
 import {
   Body,
@@ -13,89 +13,109 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Request,
+  UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { Task } from './task.model';
 
 @ApiTags('tasks')
-@Controller()
+@UseGuards(JwtAuthGuard)
+@Controller('me/tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   /**
-   * Crea un nuovo task per l'utente specificato.
+   * Crea un nuovo task per l'utente attualmente autenticato.
    *
-   * @param userId - ID dell'utente proprietario del task
+   * @param req - Oggetto request contenente i dati dell'utente autenticato
    * @param dto - Dati del task da creare
    * @returns Il task creato
-   * @throws {NotFoundException} Se l'utente specificato non esiste
    */
-  @Post('users/:userId/tasks')
-  @ApiCreatedResponse({ type: Task })
-  createForUser(
-    @Param('userId', ParseIntPipe) userId: number,
-    @Body() dto: CreateTaskDto,
-  ): Promise<Task> {
-    return this.tasksService.createForUser(userId, dto);
+  @Post()
+  create(@Request() req: any, @Body() dto: CreateTaskDto) {
+    return this.tasksService.createForUser(req.user.userId, dto);
   }
 
   /**
-   * Restituisce tutti i task dell'utente specificato.
+   * Restituisce tutti i task dell'utente attualmente autenticato.
    *
-   * @param userId - ID dell'utente di cui recuperare i task
+   * @param req - Oggetto request contenente i dati dell'utente autenticato
    * @returns Array di tutti i task dell'utente
    */
-  @Get('users/:userId/tasks')
-  @ApiOkResponse({ type: [Task] })
-  findAllForUser(
-    @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<Task[]> {
-    return this.tasksService.findAllForUser(userId);
+  @Get()
+  findAll(@Request() req: any) {
+    return this.tasksService.findAllForUser(req.user.userId);
   }
 
   /**
-   * Restituisce un singolo task identificato dal suo ID.
+   * Restituisce un singolo task dell'utente autenticato.
+   * Se il task appartiene a un altro utente, viene restituito un errore 404
+   * per mascherare l'esistenza della risorsa (security by obscurity).
    *
-   * @param id - ID numerico del task
+   * @param req - Oggetto request contenente i dati dell'utente autenticato
+   * @param id - ID del task da recuperare
    * @returns Il task trovato
-   * @throws {NotFoundException} Se il task non esiste
+   * @throws {NotFoundException} Se il task non esiste o appartiene a un altro utente
    */
-  @Get('tasks/:id')
-  @ApiOkResponse({ type: Task })
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<Task> {
-    return this.tasksService.findOne(id);
+  @Get(':id')
+  async findOne(
+    @Request() req: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const task = await this.tasksService.findOne(id);
+    if (task.userId !== req.user.userId) {
+      throw new NotFoundException('Task not found');
+    }
+    return task;
   }
 
   /**
-   * Aggiorna un task esistente con i dati forniti.
+   * Aggiorna un task dell'utente autenticato.
+   * Se il task appartiene a un altro utente, viene restituito un errore 404.
    *
+   * @param req - Oggetto request contenente i dati dell'utente autenticato
    * @param id - ID del task da aggiornare
    * @param dto - Dati parziali da applicare al task
    * @returns Il task aggiornato
-   * @throws {NotFoundException} Se il task non esiste
+   * @throws {NotFoundException} Se il task non esiste o appartiene a un altro utente
    */
-  @Patch('tasks/:id')
-  @ApiOkResponse({ type: Task })
-  update(
+  @Patch(':id')
+  async update(
+    @Request() req: any,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTaskDto,
-  ): Promise<Task> {
+  ) {
+    const task = await this.tasksService.findOne(id);
+    if (task.userId !== req.user.userId) {
+      throw new NotFoundException('Task not found');
+    }
     return this.tasksService.update(id, dto);
   }
 
   /**
-   * Elimina definitivamente un task dal sistema.
+   * Elimina un task dell'utente autenticato.
+   * Se il task appartiene a un altro utente, viene restituito un errore 404.
    *
+   * @param req - Oggetto request contenente i dati dell'utente autenticato
    * @param id - ID del task da eliminare
-   * @throws {NotFoundException} Se il task non esiste
+   * @throws {NotFoundException} Se il task non esiste o appartiene a un altro utente
    */
-  @Delete('tasks/:id')
+  @Delete(':id')
   @HttpCode(204)
-  @ApiOkResponse({ description: 'Task deleted' })
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async remove(
+    @Request() req: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const task = await this.tasksService.findOne(id);
+    if (task.userId !== req.user.userId) {
+      throw new NotFoundException('Task not found');
+    }
     await this.tasksService.remove(id);
   }
 }
+
