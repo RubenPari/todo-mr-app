@@ -70,6 +70,17 @@ Configure via environment variables (defaults work with docker-compose):
 - `DB_PASSWORD` (default: `password`)
 - `DB_NAME` (default: `todo_app`)
 
+### Application configuration
+
+- `PORT` (default: `3000`) - Porta su cui ascolta il server HTTP
+- `NODE_ENV` (default: `development`) - Ambiente di esecuzione
+
+### JWT configuration
+
+- `JWT_SECRET` (default: `dev-secret`) - **IMPORTANTE**: Cambia questo valore in produzione!
+  - Genera una chiave sicura con: `openssl rand -base64 32`
+  - In produzione, usa un secret manager (AWS Secrets Manager, HashiCorp Vault, etc.)
+
 On application startup, all models are automatically synced (`synchronize: true` in development).
 
 ## API Features
@@ -184,11 +195,26 @@ docker compose build
 docker compose up -d
 ```
 
+**⚠️ IMPORTANTE**: Prima di eseguire in produzione, configura `JWT_SECRET` nel file `docker-compose.yml` o tramite variabile d'ambiente:
+
+```bash
+# Genera una chiave sicura
+openssl rand -base64 32
+
+# Esegui con variabile d'ambiente
+JWT_SECRET=your-secret-key docker compose up -d
+```
+
 This starts:
 - **MySQL** database on port 3307
 - **NestJS app** on port 3000
 
 The app will automatically sync the database schema on startup.
+
+**Note di sicurezza per produzione:**
+- Cambia tutte le password di default nel `docker-compose.yml`
+- Usa un secret manager per gestire `JWT_SECRET` e password del database
+- Considera l'uso di `docker-compose.override.yml` per variabili d'ambiente locali (non committare questo file)
 
 ### View logs
 

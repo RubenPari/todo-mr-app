@@ -20,6 +20,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   app:
     build: .
@@ -28,6 +30,7 @@ services:
       db:
         condition: service_healthy
     environment:
+      NODE_ENV: production
       PORT: 3000
       DB_HOST: db
       DB_PORT: 3306
@@ -35,9 +38,18 @@ services:
       DB_USER: todo_user
       DB_PASSWORD: todo_password
       DB_NAME: todo_app
+      # JWT_SECRET: configurare una chiave sicura in produzione
+      # Per sviluppo, usa un valore casuale generato (es. openssl rand -base64 32)
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
     ports:
       - '3000:3000'
     command: ["node", "dist/main.js"]
+    networks:
+      - app-network
 
 volumes:
   db_data:
+
+networks:
+  app-network:
+    driver: bridge
