@@ -8,6 +8,7 @@ import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
+import { TaskOwnershipGuard } from './guards/task-ownership.guard';
 import { Task } from './task.model';
 import { UsersModule } from '../users/users.module';
 
@@ -19,7 +20,7 @@ import { UsersModule } from '../users/users.module';
    */
   imports: [SequelizeModule.forFeature([Task]), UsersModule],
   controllers: [TasksController],
-  providers: [TasksService],
+  providers: [TasksService, TaskOwnershipGuard],
   exports: [TasksService],
 })
 export class TasksModule {}

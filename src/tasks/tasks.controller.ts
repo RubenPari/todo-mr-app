@@ -13,14 +13,14 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Request,
   UseGuards,
-  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt.guard';
-import { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/interfaces/jwt-payload.interface';
 import { TasksService } from './tasks.service';
+import { TaskOwnershipGuard } from './guards/task-ownership.guard';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
@@ -33,92 +33,70 @@ export class TasksController {
   /**
    * Crea un nuovo task per l'utente attualmente autenticato.
    *
-   * @param req - Oggetto request contenente i dati dell'utente autenticato
+   * @param user - Utente autenticato (estratto tramite @CurrentUser decorator)
    * @param dto - Dati del task da creare
    * @returns Il task creato
    */
   @Post()
   create(
-    @Request() req: { user: AuthenticatedUser },
+    @CurrentUser() user: AuthenticatedUser,
     @Body() dto: CreateTaskDto,
   ) {
-    return this.tasksService.createForUser(req.user.userId, dto);
+    return this.tasksService.createForUser(user.userId, dto);
   }
 
   /**
    * Restituisce tutti i task dell'utente attualmente autenticato.
    *
-   * @param req - Oggetto request contenente i dati dell'utente autenticato
+   * @param user - Utente autenticato (estratto tramite @CurrentUser decorator)
    * @returns Array di tutti i task dell'utente
    */
   @Get()
-  findAll(@Request() req: { user: AuthenticatedUser }) {
-    return this.tasksService.findAllForUser(req.user.userId);
+  findAll(@CurrentUser() user: AuthenticatedUser) {
+    return this.tasksService.findAllForUser(user.userId);
   }
 
   /**
    * Restituisce un singolo task dell'utente autenticato.
-   * Se il task appartiene a un altro utente, viene restituito un errore 404
-   * per mascherare l'esistenza della risorsa (security by obscurity).
+   * La verifica della proprietà è gestita da TaskOwnershipGuard.
    *
-   * @param req - Oggetto request contenente i dati dell'utente autenticato
    * @param id - ID del task da recuperare
-   * @returns Il task trovato
-   * @throws {NotFoundException} Se il task non esiste o appartiene a un altro utente
+   * @returns Il task trovato (già verificato dalla guard)
    */
   @Get(':id')
-  async findOne(
-    @Request() req: { user: AuthenticatedUser },
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    const task = await this.tasksService.findOne(id);
-    if (task.userId !== req.user.userId) {
-      throw new NotFoundException('Task not found');
-    }
-    return task;
+  @UseGuards(TaskOwnershipGuard)
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    // Il task è già stato verificato e attaccato alla richiesta dalla guard
+    return this.tasksService.findOne(id);
   }
 
   /**
    * Aggiorna un task dell'utente autenticato.
-   * Se il task appartiene a un altro utente, viene restituito un errore 404.
+   * La verifica della proprietà è gestita da TaskOwnershipGuard.
    *
-   * @param req - Oggetto request contenente i dati dell'utente autenticato
    * @param id - ID del task da aggiornare
    * @param dto - Dati parziali da applicare al task
    * @returns Il task aggiornato
-   * @throws {NotFoundException} Se il task non esiste o appartiene a un altro utente
    */
   @Patch(':id')
-  async update(
-    @Request() req: { user: AuthenticatedUser },
+  @UseGuards(TaskOwnershipGuard)
+  update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTaskDto,
   ) {
-    const task = await this.tasksService.findOne(id);
-    if (task.userId !== req.user.userId) {
-      throw new NotFoundException('Task not found');
-    }
     return this.tasksService.update(id, dto);
   }
 
   /**
    * Elimina un task dell'utente autenticato.
-   * Se il task appartiene a un altro utente, viene restituito un errore 404.
+   * La verifica della proprietà è gestita da TaskOwnershipGuard.
    *
-   * @param req - Oggetto request contenente i dati dell'utente autenticato
    * @param id - ID del task da eliminare
-   * @throws {NotFoundException} Se il task non esiste o appartiene a un altro utente
    */
   @Delete(':id')
   @HttpCode(204)
-  async remove(
-    @Request() req: { user: AuthenticatedUser },
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    const task = await this.tasksService.findOne(id);
-    if (task.userId !== req.user.userId) {
-      throw new NotFoundException('Task not found');
-    }
+  @UseGuards(TaskOwnershipGuard)
+  async remove(@Param('id', ParseIntPipe) id: number) {
     await this.tasksService.remove(id);
   }
 }

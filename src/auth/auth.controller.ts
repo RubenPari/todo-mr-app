@@ -5,7 +5,6 @@ import {
   HttpCode,
   Post,
   UseGuards,
-  Request,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -13,7 +12,8 @@ import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt.guard';
-import { AuthenticatedUser } from './interfaces/jwt-payload.interface';
+import { CurrentUser } from './decorators/current-user.decorator';
+import type { AuthenticatedUser } from './interfaces/jwt-payload.interface';
 
 /**
  * Controller per la gestione dell'autenticazione e registrazione utenti.
@@ -57,13 +57,12 @@ export class AuthController {
    * Restituisce il profilo dell'utente attualmente autenticato.
    * Richiede un token JWT valido nell'header Authorization.
    *
-   * @param req - Oggetto request di NestJS contenente i dati dell'utente autenticato
+   * @param user - Utente autenticato (estratto tramite @CurrentUser decorator)
    * @returns Il profilo completo dell'utente autenticato
-   * @remarks req.user viene popolato da JwtStrategy.validate dopo la validazione del token
    */
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async me(@Request() req: { user: AuthenticatedUser }) {
-    return this.users.findOne(req.user.userId);
+  async me(@CurrentUser() user: AuthenticatedUser) {
+    return this.users.findOne(user.userId);
   }
 }
