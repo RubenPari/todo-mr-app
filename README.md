@@ -51,11 +51,13 @@ L'API sarà disponibile su `http://localhost:3000` e la documentazione Swagger s
   - **Perché Sequelize?** ORM maturo e ben documentato con forte supporto TypeScript, eccellente per database relazionali, API familiare e integrazione seamless con NestJS tramite `@nestjs/sequelize`
 - **Database**: MySQL 8.0 (configurabile tramite variabili d'ambiente)
 - **Autenticazione**: JWT con Passport.js
+- **Configurazione**: `@nestjs/config` con validazione Joi per gestione centralizzata delle variabili d'ambiente
 - **Validazione**: `class-validator` + `class-transformer` con ValidationPipe globale
-- **Documentazione API**: Swagger/OpenAPI su `/api`
+- **Documentazione API**: Swagger/OpenAPI su `/api` con supporto Bearer Auth
 - **Containerizzazione**: Docker + Docker Compose con build multi-stage
 - **Testing**: Test unitari Jest e test end-to-end con Supertest
 - **Hash delle password**: bcrypt (password saltate e hashate, mai memorizzate in chiaro)
+- **Soft Delete**: Eliminazioni logiche con possibilità di ripristino
 
 ## Setup del Progetto
 
@@ -79,28 +81,30 @@ npm run start:prod
 
 Il server HTTP ascolta sulla porta definita da `process.env.PORT` se impostata, altrimenti sulla porta `3000`.
 
-### Configurazione Database (MySQL + Sequelize)
+### Configurazione
 
-Configurazione tramite variabili d'ambiente (i valori di default funzionano con docker-compose):
+Tutte le variabili d'ambiente sono validate all'avvio tramite `ConfigModule`. Copia `.env.example` in `.env` e configura i valori:
 
+**Database (MySQL + Sequelize)**:
 - `DB_HOST` (default: `localhost`)
 - `DB_PORT` (default: `3306`)
-- `DB_USER` (default: `root`)
-- `DB_PASSWORD` (default: `password`)
+- `DB_USER` (obbligatorio)
+- `DB_PASSWORD` (obbligatorio)
 - `DB_NAME` (default: `todo_app`)
 
-### Configurazione Applicazione
-
+**Applicazione**:
 - `PORT` (default: `3000`) - Porta su cui ascolta il server HTTP
-- `NODE_ENV` (default: `development`) - Ambiente di esecuzione
+- `NODE_ENV` (default: `development`) - Ambiente di esecuzione (`development`, `production`, `test`)
 
-### Configurazione JWT
-
-- `JWT_SECRET` (default: `dev-secret`) - **IMPORTANTE**: Cambia questo valore in produzione!
+**JWT**:
+- `JWT_SECRET` (obbligatorio, minimo 32 caratteri) - **IMPORTANTE**: Cambia questo valore in produzione!
   - Genera una chiave sicura con: `openssl rand -base64 32`
   - In produzione, usa un secret manager (AWS Secrets Manager, HashiCorp Vault, ecc.)
 
-All'avvio dell'applicazione, tutti i modelli vengono sincronizzati automaticamente (`synchronize: true` in sviluppo).
+**Nota**: 
+- In sviluppo (`NODE_ENV=development`), i modelli vengono sincronizzati automaticamente (`synchronize: true`)
+- In produzione (`NODE_ENV=production`), `synchronize` è disabilitato per sicurezza - usa migrazioni database
+- Connection pooling è configurato esplicitamente (max: 10 connessioni)
 
 ## Funzionalità API
 
@@ -151,11 +155,13 @@ curl -X POST http://localhost:3000/me/tasks \
 
 ### Validazione e Gestione Errori
 
-- Validazione degli input tramite decoratori `class-validator` su tutti i DTO
-- Configurazione ValidationPipe:
+- **Validazione Input**: Decoratori `class-validator` su tutti i DTO
+- **ValidationPipe Globale**:
   - `whitelist: true` — Rimuove proprietà sconosciute
   - `forbidNonWhitelisted: true` — Rifiuta richieste con proprietà non ammesse
   - `transform: true` — Converte automaticamente i tipi primitivi (es. ID stringa → numero)
+- **HttpExceptionFilter Globale**: Formato consistente per tutte le risposte di errore
+- **LoggingInterceptor Globale**: Logging strutturato di tutte le richieste HTTP (metodo, URL, status code, tempo di risposta)
 - Codici di errore HTTP appropriati (400 per validazione, 401 per autenticazione, 404 per non trovato, 409 per conflitti)
 
 ### Documentazione Swagger/OpenAPI
@@ -166,7 +172,11 @@ Documentazione API interattiva disponibile su:
 http://localhost:3000/api
 ```
 
-Usa Swagger UI per testare tutti gli endpoint in modo interattivo.
+**Funzionalità**:
+- Test interattivo di tutti gli endpoint
+- Supporto Bearer Auth: clicca su "Authorize" e inserisci il token JWT
+- Schema completo di tutti i DTO e modelli
+- Esempi di richieste e risposte
 
 ### Collection Postman
 
@@ -236,7 +246,9 @@ Questo avvia:
 - **MySQL** database sulla porta 3307
 - **App NestJS** sulla porta 3000
 
-L'app sincronizzerà automaticamente lo schema del database all'avvio.
+**Nota**: 
+- In sviluppo, l'app sincronizza automaticamente lo schema del database (`synchronize: true`)
+- In produzione, `synchronize` è disabilitato - usa migrazioni database
 
 **Note di sicurezza per produzione:**
 - Cambia tutte le password di default nel `docker-compose.yml`
@@ -275,28 +287,39 @@ src/
 │   ├── jwt.strategy.ts      # Strategia Passport JWT
 │   ├── jwt.guard.ts         # Protezione @UseGuards(JwtAuthGuard)
 │   ├── auth.module.ts
+│   ├── decorators/
+│   │   └── current-user.decorator.ts  # Decorator type-safe per utente autenticato
 │   ├── dto/login.dto.ts
 │   └── interfaces/jwt-payload.interface.ts
 ├── users/                   # Modulo di gestione utenti
 │   ├── users.controller.ts  # Endpoint CRUD utenti
-│   ├── users.service.ts     # Logica di business utenti e hash password
+│   ├── users.service.ts     # Logica di business utenti, hash password, soft delete
 │   ├── users.service.spec.ts # Test unitari per UsersService
-│   ├── user.model.ts        # Modello Sequelize
+│   ├── user.model.ts        # Modello Sequelize con soft delete e indici
 │   ├── users.module.ts
 │   └── dto/
 │       ├── create-user.dto.ts
 │       └── update-user.dto.ts
 ├── tasks/                   # Modulo di gestione task
 │   ├── tasks.controller.ts  # Endpoint protetti (/me/tasks) per utenti autenticati
-│   ├── tasks.service.ts     # Logica di business task
+│   ├── tasks.service.ts     # Logica di business task, soft delete
 │   ├── tasks.service.spec.ts # Test unitari per TasksService
-│   ├── task.model.ts        # Modello Sequelize con FK a users
+│   ├── task.model.ts        # Modello Sequelize con FK a users, soft delete, indici
 │   ├── tasks.module.ts
+│   ├── guards/
+│   │   └── task-ownership.guard.ts  # Guard per verifica proprietà task
 │   └── dto/
 │       ├── create-task.dto.ts
 │       └── update-task.dto.ts
+├── config/                  # Configurazione centralizzata
+│   └── config.module.ts     # ConfigModule con validazione Joi
+├── common/                  # Componenti condivisi
+│   ├── filters/
+│   │   └── http-exception.filter.ts  # Exception filter globale
+│   └── interceptors/
+│       └── logging.interceptor.ts    # Logging interceptor globale
 ├── app.module.ts            # Modulo radice (configurazione Sequelize, import)
-└── main.ts                  # Bootstrap applicazione, setup ValidationPipe, configurazione Swagger
+└── main.ts                  # Bootstrap applicazione, setup ValidationPipe, Swagger, filters, interceptors
 
 test/
 ├── app.e2e-spec.ts          # Test E2E per autenticazione e workflow completi
@@ -315,8 +338,13 @@ test/
 3. **Dependency Injection**: Container IoC di NestJS per accoppiamento lasco
 4. **Pattern Repository-like**: I servizi incapsulano le operazioni ORM
 5. **Pattern DTO**: Validazione della forma di richiesta/risposta con `class-validator`
-6. **Gestione Eccezioni Globale**: Filtri eccezioni integrati di NestJS per risposte di errore consistenti
-7. **Autenticazione Stateless**: I token JWT permettono scalabilità orizzontale senza storage di sessioni
+6. **Configurazione Centralizzata**: ConfigModule con validazione automatica delle variabili d'ambiente
+7. **Guards per Autorizzazione**: TaskOwnershipGuard per centralizzare la verifica di proprietà
+8. **Decorators Personalizzati**: @CurrentUser() per type safety migliorata
+9. **Gestione Eccezioni Globale**: HttpExceptionFilter per risposte di errore consistenti
+10. **Logging Strutturato**: LoggingInterceptor per tracciabilità completa delle richieste
+11. **Soft Delete**: Eliminazioni logiche con possibilità di ripristino
+12. **Autenticazione Stateless**: I token JWT permettono scalabilità orizzontale senza storage di sessioni
 
 ## Decisioni di Implementazione Chiave
 
@@ -346,21 +374,30 @@ test/
 
 5. **ValidationPipe Globale**: Validazione input centralizzata su tutti gli endpoint. Previene che dati invalidi raggiungano la logica di business.
 
-6. **Swagger/OpenAPI**: Generato automaticamente dai decoratori (@ApiProperty, @ApiTags). Facile mantenere la documentazione sincronizzata con il codice.
+6. **Swagger/OpenAPI**: Generato automaticamente dai decoratori (@ApiProperty, @ApiTags) con supporto Bearer Auth. Facile mantenere la documentazione sincronizzata con il codice.
 
 7. **Build Docker multi-stage**: Riduce la dimensione dell'immagine escludendo dipendenze dev e artefatti di build dallo stage di runtime.
 
-8. **Sincronizzazione database automatica**: `synchronize: true` è conveniente per lo sviluppo; in produzione si userebbero migrazioni (es. con `sequelize-cli`).
+8. **Configurazione Centralizzata**: ConfigModule con validazione Joi garantisce che tutte le variabili d'ambiente siano valide all'avvio.
+
+9. **Sincronizzazione database condizionale**: `synchronize: true` solo in sviluppo (`NODE_ENV=development`); in produzione è disabilitato per sicurezza. Connection pooling configurato esplicitamente.
+
+10. **Soft Delete**: Eliminazioni logiche con campo `deletedAt` per audit trail e possibilità di ripristino.
+
+11. **Indici Database**: Indici ottimizzati su colonne frequentemente interrogate (`users.email`, `tasks.userId`) per migliorare le performance.
 
 ## Considerazioni su Performance e Produzione
 
 ### Per deployment in produzione:
 
-1. **Configurazione Ambiente**: Usa file `.env` o gestione segreti (AWS Secrets Manager, HashiCorp Vault)
-2. **Migrazioni Database**: Sostituisci `synchronize: true` con migrazioni esplicite per mantenere la cronologia dello schema
-3. **Connection Pooling**: Configura `Sequelize.connectionManager.pool` per il riutilizzo delle connessioni MySQL
+1. **Configurazione Ambiente**: Usa file `.env` (non committato) o gestione segreti (AWS Secrets Manager, HashiCorp Vault)
+   - Copia `.env.example` in `.env` e configura tutti i valori
+   - Genera `JWT_SECRET` sicuro: `openssl rand -base64 32`
+2. **Migrazioni Database**: Implementa migrazioni con `sequelize-cli` per versionare lo schema
+   - `synchronize` è già disabilitato in produzione automaticamente
+3. **Connection Pooling**: ✅ Già configurato (max: 10, min: 0)
 4. **Rate Limiting**: Aggiungi `@nestjs/throttler` per prevenire attacchi brute-force
-5. **Logging**: Sostituisci console.log con logging strutturato (Winston, Bunyan)
+5. **Logging**: ✅ LoggingInterceptor già implementato per tracciabilità
 6. **Monitoring**: Integra Application Performance Monitoring (APM) come New Relic o Datadog
 7. **Sicurezza**:
    - Abilita HTTPS/TLS
@@ -371,7 +408,8 @@ test/
 
 ### Ottimizzazione Database:
 
-- Aggiungi indici database su colonne frequentemente interrogate (es. `users.email`, `tasks.userId`)
+- ✅ Indici database già aggiunti su `users.email` e `tasks.userId`
+- ✅ Indice composito su `tasks.userId` e `tasks.completed`
 - Considera una strategia di caching per dati frequentemente accessibili (Redis)
 - Profila query lente con `slow_query_log` di MySQL
 
