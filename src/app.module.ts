@@ -32,7 +32,10 @@ import { AuthModule } from './auth/auth.module';
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_NAME', 'todo_app'),
           autoLoadModels: true,
-          synchronize: configService.get<string>('NODE_ENV', 'development') === 'development',
+          // Abilita synchronize in sviluppo e test per sincronizzare lo schema automaticamente
+          synchronize: ['development', 'test'].includes(
+            configService.get<string>('NODE_ENV', 'development'),
+          ),
           logging: configService.get<string>('NODE_ENV', 'development') === 'development',
           pool: {
             max: 10,
