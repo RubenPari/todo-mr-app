@@ -6,7 +6,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 /**
  * Funzione di bootstrap che avvia il server HTTP.
@@ -14,6 +17,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
  */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
   /**
    * Abilita un ValidationPipe globale per validare automaticamente
@@ -31,6 +35,18 @@ async function bootstrap() {
   );
 
   /**
+   * Exception filter globale per formattare le risposte di errore.
+   * Fornisce un formato consistente per tutte le eccezioni HTTP.
+   */
+  app.useGlobalFilters(new HttpExceptionFilter());
+
+  /**
+   * Interceptor globale per il logging delle richieste HTTP.
+   * Registra metodo, URL, status code e tempo di risposta.
+   */
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
+  /**
    * Configurazione della documentazione OpenAPI/Swagger.
    * Genera il documento OpenAPI e monta l'interfaccia Swagger UI su /api.
    */
@@ -38,6 +54,7 @@ async function bootstrap() {
     .setTitle('Todo API')
     .setDescription('API per la gestione di utenti e task (to-do).')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -47,7 +64,8 @@ async function bootstrap() {
    * Avvia il server HTTP sulla porta definita dalla variabile d'ambiente PORT
    * o sulla porta 3000 come fallback.
    */
-  await app.listen(process.env.PORT ?? 3000);
+  const port = configService.get<number>('PORT', 3000);
+  await app.listen(port);
 }
 
 /**
