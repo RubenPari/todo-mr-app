@@ -38,10 +38,7 @@ export class TasksController {
    * @returns Il task creato
    */
   @Post()
-  create(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: CreateTaskDto,
-  ) {
+  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateTaskDto) {
     return this.tasksService.createForUser(user.userId, dto);
   }
 
@@ -80,10 +77,7 @@ export class TasksController {
    */
   @Patch(':id')
   @UseGuards(TaskOwnershipGuard)
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateTaskDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTaskDto) {
     return this.tasksService.update(id, dto);
   }
 
