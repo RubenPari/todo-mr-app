@@ -36,7 +36,9 @@ import { AuthModule } from './auth/auth.module';
           synchronize: ['development', 'test'].includes(
             configService.get<string>('NODE_ENV', 'development'),
           ),
-          logging: configService.get<string>('NODE_ENV', 'development') === 'development',
+          logging:
+            configService.get<string>('NODE_ENV', 'development') ===
+            'development',
           pool: {
             max: 10,
             min: 0,
