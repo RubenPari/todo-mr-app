@@ -11,6 +11,7 @@ import {
   Model,
   ForeignKey,
   BelongsTo,
+  Index,
 } from 'sequelize-typescript';
 import type {
   CreationOptional,
@@ -19,7 +20,22 @@ import type {
 } from 'sequelize';
 import { User } from '../users/user.model';
 
-@Table({ tableName: 'tasks' })
+@Table({
+  tableName: 'tasks',
+  paranoid: true, // Abilita soft delete (aggiunge campo deletedAt)
+  indexes: [
+    // Indice su userId per ottimizzare le query di ricerca task per utente
+    {
+      fields: ['user_id'],
+      name: 'idx_tasks_user_id',
+    },
+    // Indice composito su userId e completed per query filtrate
+    {
+      fields: ['user_id', 'completed'],
+      name: 'idx_tasks_user_completed',
+    },
+  ],
+})
 export class Task extends Model<
   InferAttributes<Task>,
   InferCreationAttributes<Task>
@@ -71,8 +87,10 @@ export class Task extends Model<
    * Riferimento alla tabella 'users' tramite il campo 'id'.
    * Configurato con CASCADE per eliminare/aggiornare automaticamente
    * quando l'utente viene eliminato o aggiornato.
+   * Indice aggiunto per ottimizzare le query di ricerca task per utente.
    */
   @ForeignKey(() => User)
+  @Index('idx_tasks_user_id')
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
@@ -82,6 +100,13 @@ export class Task extends Model<
     onUpdate: 'CASCADE',
   })
   declare userId: number;
+
+  /**
+   * Timestamp di eliminazione (soft delete).
+   * Viene impostato automaticamente quando il task viene eliminato.
+   * I record con deletedAt non nullo vengono esclusi dalle query di default.
+   */
+  declare deletedAt?: CreationOptional<Date | null>;
 
   /**
    * Relazione many-to-one: il task appartiene a un utente.

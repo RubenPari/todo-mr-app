@@ -13,6 +13,7 @@ import {
   Model,
   HasMany,
   Unique,
+  Index,
 } from 'sequelize-typescript';
 import type {
   CreationOptional,
@@ -24,6 +25,7 @@ import { Task } from '../tasks/task.model';
 
 @Table({
   tableName: 'users',
+  paranoid: true, // Abilita soft delete (aggiunge campo deletedAt)
   defaultScope: {
     attributes: { exclude: ['password'] },
   },
@@ -61,8 +63,10 @@ export class User extends Model<
   /**
    * Indirizzo email univoco dell'utente.
    * Deve essere univoco nel database e viene utilizzato per l'autenticazione.
+   * Indice univoco per ottimizzare le query di ricerca per email.
    */
   @Unique
+  @Index
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -79,6 +83,13 @@ export class User extends Model<
     allowNull: false,
   })
   declare password: string;
+
+  /**
+   * Timestamp di eliminazione (soft delete).
+   * Viene impostato automaticamente quando l'utente viene eliminato.
+   * I record con deletedAt non nullo vengono esclusi dalle query di default.
+   */
+  declare deletedAt?: CreationOptional<Date | null>;
 
   /**
    * Relazione one-to-many: un utente possiede molti task.
