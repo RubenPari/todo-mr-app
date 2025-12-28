@@ -97,7 +97,10 @@ export class UsersService {
   }
 
   /**
-   * Elimina definitivamente un utente dal database.
+   * Elimina un utente (soft delete).
+   * L'utente non viene rimosso permanentemente, ma viene marcato come eliminato
+   * impostando il campo deletedAt. Può essere ripristinato con restore().
+   * I task associati vengono eliminati automaticamente grazie a CASCADE.
    *
    * @param id - ID dell'utente da eliminare
    * @throws {NotFoundException} Se l'utente con l'ID specificato non esiste
@@ -105,5 +108,40 @@ export class UsersService {
   async remove(id: number): Promise<void> {
     const user = await this.findOne(id);
     await user.destroy();
+  }
+
+  /**
+   * Ripristina un utente precedentemente eliminato (soft delete).
+   *
+   * @param id - ID dell'utente da ripristinare
+   * @returns L'utente ripristinato
+   * @throws {NotFoundException} Se l'utente con l'ID specificato non esiste
+   */
+  async restore(id: number): Promise<User> {
+    const user = await this.userModel.findByPk(id, { paranoid: false });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    if (!user.deletedAt) {
+      throw new NotFoundException(`User with id ${id} is not deleted`);
+    }
+    user.deletedAt = null;
+    await user.save();
+    return user;
+  }
+
+  /**
+   * Elimina permanentemente un utente dal database (hard delete).
+   * ATTENZIONE: Questa operazione è irreversibile e elimina anche tutti i task associati.
+   *
+   * @param id - ID dell'utente da eliminare permanentemente
+   * @throws {NotFoundException} Se l'utente con l'ID specificato non esiste
+   */
+  async hardRemove(id: number): Promise<void> {
+    const user = await this.userModel.findByPk(id, { paranoid: false });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    await user.destroy({ force: true });
   }
 }

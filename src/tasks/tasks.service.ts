@@ -81,7 +81,9 @@ export class TasksService {
   }
 
   /**
-   * Elimina definitivamente un task dal database.
+   * Elimina un task (soft delete).
+   * Il task non viene rimosso permanentemente, ma viene marcato come eliminato
+   * impostando il campo deletedAt. Può essere ripristinato con restore().
    *
    * @param id - ID del task da eliminare
    * @throws {NotFoundException} Se il task con l'ID specificato non esiste
@@ -89,5 +91,40 @@ export class TasksService {
   async remove(id: number): Promise<void> {
     const task = await this.findOne(id);
     await task.destroy();
+  }
+
+  /**
+   * Ripristina un task precedentemente eliminato (soft delete).
+   *
+   * @param id - ID del task da ripristinare
+   * @returns Il task ripristinato
+   * @throws {NotFoundException} Se il task con l'ID specificato non esiste
+   */
+  async restore(id: number): Promise<Task> {
+    const task = await this.taskModel.findByPk(id, { paranoid: false });
+    if (!task) {
+      throw new NotFoundException(`Task with id ${id} not found`);
+    }
+    if (!task.deletedAt) {
+      throw new NotFoundException(`Task with id ${id} is not deleted`);
+    }
+    task.deletedAt = null;
+    await task.save();
+    return task;
+  }
+
+  /**
+   * Elimina permanentemente un task dal database (hard delete).
+   * ATTENZIONE: Questa operazione è irreversibile.
+   *
+   * @param id - ID del task da eliminare permanentemente
+   * @throws {NotFoundException} Se il task con l'ID specificato non esiste
+   */
+  async hardRemove(id: number): Promise<void> {
+    const task = await this.taskModel.findByPk(id, { paranoid: false });
+    if (!task) {
+      throw new NotFoundException(`Task with id ${id} not found`);
+    }
+    await task.destroy({ force: true });
   }
 }
