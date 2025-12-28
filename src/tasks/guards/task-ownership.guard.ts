@@ -17,7 +17,7 @@ export class TaskOwnershipGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const taskId = parseInt(request.params.id, 10);
+    const taskId = parseInt(String(request.params.id), 10);
     const user: AuthenticatedUser = request.user;
 
     const task = await this.tasksService.findOne(taskId);
@@ -30,4 +30,3 @@ export class TaskOwnershipGuard implements CanActivate {
     return true;
   }
 }
-
