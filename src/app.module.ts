@@ -5,29 +5,44 @@
  */
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { ConfigModule } from './config/config.module';
+import { ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { TasksModule } from './tasks/tasks.module';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
+    ConfigModule,
     /**
      * Configurazione globale di Sequelize per connettersi a MySQL.
-     * I parametri di connessione vengono letti da variabili d'ambiente con valori di fallback.
-     * - autoLoadModels: carica automaticamente tutti i modelli registrati nei moduli
-     * - synchronize: sincronizza automaticamente lo schema del DB con i modelli (solo per sviluppo)
-     * - logging: disabilita il logging SQL dettagliato in console
+     * Usa ConfigService per accedere alle variabili d'ambiente validate.
+     * - synchronize: abilitato SOLO in sviluppo (NODE_ENV=development)
+     * - logging: abilitato solo in sviluppo
+     * - pool: configurazione esplicita del connection pool
      */
-    SequelizeModule.forRoot({
-      dialect: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT ?? '3306', 10),
-      username: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || 'password',
-      database: process.env.DB_NAME || 'todo_app',
-      autoLoadModels: true,
-      synchronize: true,
-      logging: false,
+    SequelizeModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        return {
+          dialect: 'mysql' as const,
+          host: configService.get<string>('DB_HOST', 'localhost'),
+          port: configService.get<number>('DB_PORT', 3306),
+          username: configService.get<string>('DB_USER'),
+          password: configService.get<string>('DB_PASSWORD'),
+          database: configService.get<string>('DB_NAME', 'todo_app'),
+          autoLoadModels: true,
+          synchronize: configService.get<string>('NODE_ENV', 'development') === 'development',
+          logging: configService.get<string>('NODE_ENV', 'development') === 'development',
+          pool: {
+            max: 10,
+            min: 0,
+            acquire: 30000,
+            idle: 10000,
+          },
+        };
+      },
+      inject: [ConfigService],
     }),
     UsersModule,
     TasksModule,
